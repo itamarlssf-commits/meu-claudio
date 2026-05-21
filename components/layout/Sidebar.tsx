@@ -24,12 +24,13 @@ interface SidebarProps {
   view: string;
   onNav: (v: string) => void;
   data: AppData;
+  setData: (d: AppData) => void;
   user: User | null;
   syncStatus: 'connecting' | 'live' | 'offline';
   onSignOut: () => void;
 }
 
-export default function Sidebar({ view, onNav, data, user, syncStatus, onSignOut }: SidebarProps) {
+export default function Sidebar({ view, onNav, data, setData, user, syncStatus, onSignOut }: SidebarProps) {
   const importRef = useRef<HTMLInputElement>(null);
 
   const alertasCount = data.pacientes.filter((p) => alertasCobrancaDPP(p).length > 0).length;
@@ -54,11 +55,13 @@ export default function Sidebar({ view, onNav, data, user, syncStatus, onSignOut
       try {
         const parsed = JSON.parse(ev.target?.result as string) as AppData;
         if (parsed.pacientes) {
-          alert('Backup importado! Recarregue a página para ver os dados.');
-          localStorage.setItem('controle_consultorio_v1', JSON.stringify(parsed));
+          setData(parsed);
+          alert(`Importado com sucesso! ${parsed.pacientes.length} pacientes carregadas.`);
+        } else {
+          alert('Arquivo inválido: sem campo "pacientes".');
         }
       } catch {
-        alert('Arquivo inválido.');
+        alert('Arquivo inválido. Verifique o JSON.');
       }
     };
     reader.readAsText(file);
