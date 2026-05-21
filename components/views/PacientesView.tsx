@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import type { AppData } from '@/types/paciente';
 import { TOKENS, rowTint } from '@/lib/tokens';
 import {
@@ -30,19 +30,21 @@ export default function PacientesView({ data, setData, onOpenPaciente }: Props) 
   const [search, setSearch] = useState('');
   const [novaPaciente, setNovaPaciente] = useState(false);
 
-  // For simplicity: arquivadas = partoRealizado
-  const ativas = data.pacientes.filter((p) => !p.partoRealizado);
-  const arquivadas = data.pacientes.filter((p) => p.partoRealizado);
-  const pool = bucket === 'ativas' ? ativas : arquivadas;
+  const countAtivas = useMemo(() => data.pacientes.filter((p) => !p.partoRealizado).length, [data.pacientes]);
+  const countArquivadas = useMemo(() => data.pacientes.filter((p) => p.partoRealizado).length, [data.pacientes]);
 
-  const filtered = pool.filter((p) => {
-    if (statusFilter !== 'all' && p.status !== statusFilter) return false;
-    if (search && !p.nome.toLowerCase().includes(search.toLowerCase())) return false;
-    return true;
-  });
-
-  // Sort by DPP ascending
-  const sorted = [...filtered].sort((a, b) => (a.dpp || '').localeCompare(b.dpp || ''));
+  const sorted = useMemo(() => {
+    const pool = data.pacientes.filter((p) =>
+      bucket === 'ativas' ? !p.partoRealizado : p.partoRealizado,
+    );
+    return pool
+      .filter((p) => {
+        if (statusFilter !== 'all' && p.status !== statusFilter) return false;
+        if (search && !p.nome.toLowerCase().includes(search.toLowerCase())) return false;
+        return true;
+      })
+      .sort((a, b) => (a.dpp || '').localeCompare(b.dpp || ''));
+  }, [data.pacientes, bucket, statusFilter, search]);
 
   const STATUS_COLORS: Record<string, 'green' | 'amber' | 'red'> = {
     pago: 'green',
@@ -81,7 +83,7 @@ export default function PacientesView({ data, setData, onOpenPaciente }: Props) 
               marginBottom: -1,
             }}
           >
-            {b === 'ativas' ? `Ativas (${ativas.length})` : `Arquivadas / Pós-Parto (${arquivadas.length})`}
+            {b === 'ativas' ? `Ativas (${countAtivas})` : `Arquivadas / Pós-Parto (${countArquivadas})`}
           </button>
         ))}
       </div>

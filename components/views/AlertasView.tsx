@@ -1,6 +1,6 @@
 'use client';
 
-import type { AppData } from '@/types/paciente';
+import type { AppData, Paciente } from '@/types/paciente';
 import { TOKENS } from '@/lib/tokens';
 import {
   fmtDate,
@@ -10,15 +10,28 @@ import {
   sociosRepasses,
   idadeGestacional,
   whatsAppCobranca,
+  todayISO,
 } from '@/lib/business-logic';
-import { KPI, Card, SectionHeader, Chip, Empty } from '@/components/ui';
+import { KPI, Card, SectionHeader, Chip, Empty, Btn } from '@/components/ui';
 
 interface Props {
   data: AppData;
+  setData: (d: AppData) => void;
   onOpenPaciente: (id: string) => void;
 }
 
-export default function AlertasView({ data, onOpenPaciente }: Props) {
+export default function AlertasView({ data, setData, onOpenPaciente }: Props) {
+  const marcarRepasse = (paciente: Paciente, isLegacy: boolean, idx: number) => {
+    let next: Paciente;
+    if (isLegacy) {
+      const socios = [...(paciente.socios ?? [])];
+      socios[idx] = { ...socios[idx], pago: true, dataPgt: todayISO() };
+      next = { ...paciente, socios };
+    } else {
+      next = { ...paciente, socioPago: true, socioDataPgt: todayISO() };
+    }
+    setData({ ...data, pacientes: data.pacientes.map((p) => (p.id === paciente.id ? next : p)) });
+  };
   const { pacientes } = data;
   const hoje = new Date();
   const todayStr = hoje.toISOString().split('T')[0];
@@ -143,7 +156,7 @@ export default function AlertasView({ data, onOpenPaciente }: Props) {
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
             <thead>
               <tr style={{ borderBottom: `2px solid ${TOKENS.line}` }}>
-                {['Paciente', 'Sócio', 'Valor', 'Data Parto'].map((h) => (
+                {['Paciente', 'Sócio', 'Valor', 'Data Parto', 'Ação'].map((h) => (
                   <th key={h} style={{ textAlign: 'left', padding: '8px 12px', fontSize: 10, fontWeight: 700, color: TOKENS.muted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     {h}
                   </th>
@@ -154,16 +167,22 @@ export default function AlertasView({ data, onOpenPaciente }: Props) {
               {repasses.map((r, i) => (
                 <tr
                   key={i}
-                  onClick={() => onOpenPaciente(r.paciente.id)}
-                  style={{ borderBottom: `1px solid ${TOKENS.line2}`, cursor: 'pointer', background: '#fff7ed' }}
+                  style={{ borderBottom: `1px solid ${TOKENS.line2}`, background: '#fff7ed' }}
                 >
-                  <td style={{ padding: '10px 12px', fontWeight: 600, color: TOKENS.ink }}>{r.paciente.nome}</td>
+                  <td style={{ padding: '10px 12px', fontWeight: 600, color: TOKENS.primary, cursor: 'pointer' }}
+                    onClick={() => onOpenPaciente(r.paciente.id)}>{r.paciente.nome.split(' ').slice(0, 2).join(' ')}</td>
                   <td style={{ padding: '10px 12px', color: TOKENS.ink2 }}>{r.nome}</td>
                   <td style={{ padding: '10px 12px', fontFamily: 'ui-monospace, monospace', fontWeight: 700, color: TOKENS.amber }}>
                     {fmtMoney(r.valor)}
                   </td>
                   <td style={{ padding: '10px 12px', color: TOKENS.muted, fontSize: 12 }}>
                     {r.paciente.dataPartoReal ? fmtDate(r.paciente.dataPartoReal) : '—'}
+                  </td>
+                  <td style={{ padding: '10px 12px' }}>
+                    <Btn variant="success" size="sm"
+                      onClick={() => marcarRepasse(r.paciente, r._legacy, r._idx)}>
+                      ✓ Pago
+                    </Btn>
                   </td>
                 </tr>
               ))}

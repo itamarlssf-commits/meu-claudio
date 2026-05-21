@@ -47,13 +47,13 @@ export default function AppShell() {
           <PacientesView data={data} setData={setData} onOpenPaciente={openPaciente} />
         )}
         {view === 'financeiro' && (
-          <FinanceiroView data={data} onOpenPaciente={openPaciente} />
+          <FinanceiroView data={data} setData={setData} onOpenPaciente={openPaciente} />
         )}
         {view === 'agenda' && (
           <AgendaView data={data} onOpenPaciente={openPaciente} />
         )}
         {view === 'alertas' && (
-          <AlertasView data={data} onOpenPaciente={openPaciente} />
+          <AlertasView data={data} setData={setData} onOpenPaciente={openPaciente} />
         )}
       </main>
 
