@@ -11,21 +11,21 @@ interface ChipProps {
   size?: ChipSize;
 }
 
-const colorMap: Record<ChipColor, { bg: string; fg: string }> = {
-  green: { bg: TOKENS.greenSoft, fg: TOKENS.green },
-  red: { bg: TOKENS.redSoft, fg: TOKENS.red },
-  amber: { bg: TOKENS.amberSoft, fg: TOKENS.amber },
-  blue: { bg: TOKENS.blueSoft, fg: TOKENS.blue },
-  purple: { bg: TOKENS.purpleSoft, fg: TOKENS.purple },
-  pink: { bg: TOKENS.pinkSoft, fg: TOKENS.pink },
-  gold: { bg: '#fef9ec', fg: TOKENS.accent },
-  gray: { bg: TOKENS.line2, fg: TOKENS.muted },
+const colorMap: Record<ChipColor, { bg: string; fg: string; border: string }> = {
+  green:  { bg: TOKENS.greenSoft,  fg: '#059669', border: '#a7f3d0' },
+  red:    { bg: TOKENS.redSoft,    fg: '#dc2626', border: '#fecaca' },
+  amber:  { bg: TOKENS.amberSoft,  fg: '#d97706', border: '#fde68a' },
+  blue:   { bg: TOKENS.blueSoft,   fg: '#2563eb', border: '#bfdbfe' },
+  purple: { bg: TOKENS.purpleSoft, fg: '#7c3aed', border: '#ddd6fe' },
+  pink:   { bg: TOKENS.pinkSoft,   fg: '#db2777', border: '#fbcfe8' },
+  gold:   { bg: '#fef9ec',         fg: TOKENS.accent, border: '#fde68a' },
+  gray:   { bg: TOKENS.line2,      fg: TOKENS.muted, border: TOKENS.line },
 };
 
 export default function Chip({ children, color = 'gray', size = 'sm' }: ChipProps) {
-  const { bg, fg } = colorMap[color];
+  const { bg, fg, border } = colorMap[color];
   const fontSize = size === 'xs' ? 10 : 11;
-  const padding = size === 'xs' ? '1px 6px' : '2px 8px';
+  const padding  = size === 'xs' ? '2px 7px' : '3px 9px';
 
   return (
     <span
@@ -34,12 +34,14 @@ export default function Chip({ children, color = 'gray', size = 'sm' }: ChipProp
         alignItems: 'center',
         background: bg,
         color: fg,
+        border: `1px solid ${border}`,
         borderRadius: 20,
         fontSize,
         fontWeight: 600,
         whiteSpace: 'nowrap',
         padding,
         lineHeight: 1.4,
+        letterSpacing: '0.01em',
       }}
     >
       {children}

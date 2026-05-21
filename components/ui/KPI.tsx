@@ -16,10 +16,14 @@ export default function KPI({ label, value, sub, accent = TOKENS.primary, icon }
       style={{
         background: '#ffffff',
         border: '1px solid #e8eaed',
-        borderRadius: 12,
-        borderTop: `3px solid ${accent}`,
+        borderRadius: 14,
+        borderLeft: `4px solid ${accent}`,
         padding: '16px 18px',
         minWidth: 0,
+        boxShadow: TOKENS.shadowSm,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 4,
       }}
     >
       <div
@@ -27,30 +31,45 @@ export default function KPI({ label, value, sub, accent = TOKENS.primary, icon }
           fontSize: 10,
           fontWeight: 700,
           textTransform: 'uppercase',
-          letterSpacing: '0.06em',
+          letterSpacing: '0.07em',
           color: TOKENS.muted,
-          marginBottom: 4,
           display: 'flex',
           alignItems: 'center',
-          gap: 4,
+          gap: 5,
         }}
       >
-        {icon && <span>{icon}</span>}
+        {icon && (
+          <span
+            style={{
+              width: 20,
+              height: 20,
+              borderRadius: 6,
+              background: `${accent}18`,
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: 12,
+            }}
+          >
+            {icon}
+          </span>
+        )}
         {label}
       </div>
       <div
         style={{
-          fontSize: 24,
+          fontSize: 26,
           fontWeight: 700,
-          fontFamily: 'ui-monospace, monospace',
           color: TOKENS.ink,
           lineHeight: 1.1,
+          letterSpacing: '-0.01em',
+          fontFeatureSettings: '"tnum"',
         }}
       >
         {value}
       </div>
       {sub && (
-        <div style={{ fontSize: 11, color: TOKENS.muted, marginTop: 4 }}>{sub}</div>
+        <div style={{ fontSize: 11, color: TOKENS.muted }}>{sub}</div>
       )}
     </div>
   );

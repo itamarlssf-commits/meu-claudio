@@ -34,6 +34,7 @@ export default function AppShell() {
         view={view}
         onNav={setView}
         data={data}
+        setData={setData}
         user={user}
         syncStatus={syncStatus}
         onSignOut={handleSignOut}

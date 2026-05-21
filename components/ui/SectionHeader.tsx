@@ -10,21 +10,21 @@ interface SectionHeaderProps {
 
 export default function SectionHeader({ title, subtitle, action }: SectionHeaderProps) {
   return (
-    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16 }}>
+    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 18 }}>
       <div>
         <h2
           style={{
-            fontFamily: "Georgia, 'Times New Roman', serif",
-            fontSize: 18,
+            fontSize: 15,
             fontWeight: 700,
             color: TOKENS.primary,
             margin: 0,
+            letterSpacing: '-0.01em',
           }}
         >
           {title}
         </h2>
         {subtitle && (
-          <div style={{ fontSize: 12, color: TOKENS.muted, marginTop: 2 }}>{subtitle}</div>
+          <div style={{ fontSize: 12, color: TOKENS.muted, marginTop: 3, fontWeight: 400 }}>{subtitle}</div>
         )}
       </div>
       {action && <div>{action}</div>}

@@ -24,19 +24,18 @@ export const TOKENS = {
   purpleSoft: '#ede9fe',
   pink: '#ec4899',
   pinkSoft: '#fce7f3',
+  shadowSm: '0 1px 4px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.05)',
+  shadowMd: '0 4px 16px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05)',
+  shadowLg: '0 8px 32px rgba(0,0,0,0.10), 0 4px 12px rgba(0,0,0,0.06)',
 } as const;
 
 export type TokenKey = keyof typeof TOKENS;
 
 export function rowTint(status: StatusPagamento): string {
   switch (status) {
-    case 'pago':
-      return '#f0fdf4';
-    case 'parcial':
-      return '#fffbeb';
-    case 'pendente':
-      return '#fff1f2';
-    default:
-      return '#ffffff';
+    case 'pago':      return '#f0fdf4';
+    case 'parcial':   return '#fffbeb';
+    case 'pendente':  return '#fff1f2';
+    default:          return '#ffffff';
   }
 }
