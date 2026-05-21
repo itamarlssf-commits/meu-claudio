@@ -25,13 +25,13 @@ interface Props {
 type StatusFilter = 'all' | 'pago' | 'parcial' | 'pendente';
 
 export default function PacientesView({ data, setData, onOpenPaciente }: Props) {
-  const [bucket, setBucket] = useState<'ativas' | 'arquivadas'>('ativas');
+  const [bucket, setBucket]           = useState<'ativas' | 'arquivadas'>('ativas');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
-  const [search, setSearch] = useState('');
+  const [search, setSearch]           = useState('');
   const [novaPaciente, setNovaPaciente] = useState(false);
 
-  const countAtivas = useMemo(() => data.pacientes.filter((p) => !p.partoRealizado).length, [data.pacientes]);
-  const countArquivadas = useMemo(() => data.pacientes.filter((p) => p.partoRealizado).length, [data.pacientes]);
+  const countAtivas     = useMemo(() => data.pacientes.filter((p) => !p.partoRealizado).length, [data.pacientes]);
+  const countArquivadas = useMemo(() => data.pacientes.filter((p) => p.partoRealizado).length,  [data.pacientes]);
 
   const sorted = useMemo(() => {
     const pool = data.pacientes.filter((p) =>
@@ -43,14 +43,22 @@ export default function PacientesView({ data, setData, onOpenPaciente }: Props) 
         if (search && !p.nome.toLowerCase().includes(search.toLowerCase())) return false;
         return true;
       })
-      .sort((a, b) => (a.dpp || '').localeCompare(b.dpp || ''));
+      .sort((a, b) => {
+        // Pós-parto: ordenar pela data real do parto (mais recente primeiro)
+        if (bucket === 'arquivadas') {
+          const da = a.dataPartoReal || a.dpp || '';
+          const db = b.dataPartoReal || b.dpp || '';
+          return db.localeCompare(da); // decrescente
+        }
+        return (a.dpp || '').localeCompare(b.dpp || '');
+      });
   }, [data.pacientes, bucket, statusFilter, search]);
 
   const STATUS_COLORS: Record<string, 'green' | 'amber' | 'red'> = {
-    pago: 'green',
-    parcial: 'amber',
-    pendente: 'red',
+    pago: 'green', parcial: 'amber', pendente: 'red',
   };
+
+  const isArquivadas = bucket === 'arquivadas';
 
   return (
     <div style={{ padding: '24px 28px', maxWidth: 1100, display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -65,7 +73,7 @@ export default function PacientesView({ data, setData, onOpenPaciente }: Props) 
       />
 
       {/* Bucket tabs */}
-      <div style={{ display: 'flex', gap: 8, borderBottom: `1px solid ${TOKENS.line}`, paddingBottom: 0 }}>
+      <div style={{ display: 'flex', gap: 8, borderBottom: `1px solid ${TOKENS.line}` }}>
         {(['ativas', 'arquivadas'] as const).map((b) => (
           <button
             key={b}
@@ -130,17 +138,17 @@ export default function PacientesView({ data, setData, onOpenPaciente }: Props) 
         <Empty title="Nenhuma paciente encontrada" subtitle="Ajuste os filtros ou cadastre uma nova paciente." icon="👤" />
       ) : (
         <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
             <thead>
               <tr style={{ borderBottom: `2px solid ${TOKENS.line}` }}>
-                {['Paciente', 'DPP', 'IG', 'Pacote', 'Contrato', 'Pago', 'Saldo', 'Status', 'Alertas', ''].map(
+                {['Paciente', isArquivadas ? 'Data Parto' : 'DPP', 'IG', 'Pacote', 'Contrato', 'Pago', 'Saldo', 'Status', 'Alertas', ''].map(
                   (h) => (
                     <th
                       key={h}
                       style={{
                         textAlign: 'left',
-                        padding: '8px 10px',
-                        fontSize: 10,
+                        padding: '9px 10px',
+                        fontSize: 11,
                         fontWeight: 700,
                         color: TOKENS.muted,
                         textTransform: 'uppercase',
@@ -156,16 +164,20 @@ export default function PacientesView({ data, setData, onOpenPaciente }: Props) 
             </thead>
             <tbody>
               {sorted.map((p) => {
-                const ig = idadeGestacional(p.dum);
+                const ig      = idadeGestacional(p.dum);
                 const alertas = alertasCobrancaDPP(p);
-                const pago = totalPago(p);
-                const sld = saldo(p);
-                const pct = pctPago(p);
-                const tint = rowTint(p.status);
+                const pago    = totalPago(p);
+                const sld     = saldo(p);
+                const pct     = pctPago(p);
+                const tint    = rowTint(p.status);
+                const dataCol = isArquivadas
+                  ? (p.dataPartoReal ? fmtDate(p.dataPartoReal) : fmtDate(p.dpp))
+                  : fmtDate(p.dpp);
 
                 return (
                   <tr
                     key={p.id}
+                    className="data-row"
                     onClick={() => onOpenPaciente(p.id)}
                     style={{
                       background: tint,
@@ -173,7 +185,7 @@ export default function PacientesView({ data, setData, onOpenPaciente }: Props) 
                       cursor: 'pointer',
                     }}
                   >
-                    <td style={{ padding: '10px 10px', fontWeight: 600, color: TOKENS.ink }}>
+                    <td style={{ padding: '11px 10px', fontWeight: 600, color: TOKENS.ink }}>
                       {p.nome}
                       {p.observacoes.length > 0 && (
                         <span style={{ marginLeft: 5, fontSize: 11 }} title={p.observacoes[p.observacoes.length - 1].texto}>
@@ -181,52 +193,32 @@ export default function PacientesView({ data, setData, onOpenPaciente }: Props) 
                         </span>
                       )}
                     </td>
-                    <td style={{ padding: '10px 10px', color: TOKENS.ink2, whiteSpace: 'nowrap' }}>
-                      {fmtDate(p.dpp)}
+                    <td style={{ padding: '11px 10px', color: TOKENS.ink2, whiteSpace: 'nowrap', fontWeight: isArquivadas ? 600 : 400 }}>
+                      {dataCol}
                     </td>
-                    <td style={{ padding: '10px 10px', color: TOKENS.blue, whiteSpace: 'nowrap', fontFamily: 'ui-monospace, monospace', fontSize: 12 }}>
+                    <td style={{ padding: '11px 10px', color: TOKENS.blue, whiteSpace: 'nowrap', fontFamily: 'ui-monospace, monospace', fontSize: 12 }}>
                       {ig ? `${ig.semanas}s ${ig.dias}d` : '—'}
                     </td>
-                    <td style={{ padding: '10px 10px', color: TOKENS.ink2, fontSize: 12 }}>{p.pacote}</td>
-                    <td
-                      style={{
-                        padding: '10px 10px',
-                        fontFamily: 'ui-monospace, monospace',
-                        fontWeight: 600,
-                        color: TOKENS.ink,
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
+                    <td style={{ padding: '11px 10px', color: TOKENS.ink2, fontSize: 13 }}>{p.pacote}</td>
+                    <td style={{ padding: '11px 10px', fontFamily: 'ui-monospace, monospace', fontWeight: 600, color: TOKENS.ink, whiteSpace: 'nowrap' }}>
                       {fmtMoney(p.contrato)}
                     </td>
-                    <td style={{ padding: '10px 10px', whiteSpace: 'nowrap' }}>
-                      <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 12, color: TOKENS.green }}>
+                    <td style={{ padding: '11px 10px', whiteSpace: 'nowrap' }}>
+                      <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 13, color: TOKENS.green, marginBottom: 3 }}>
                         {fmtMoney(pago)}
                       </div>
                       <Progress value={pct} color={pct >= 100 ? TOKENS.green : TOKENS.amber} />
                     </td>
-                    <td
-                      style={{
-                        padding: '10px 10px',
-                        fontFamily: 'ui-monospace, monospace',
-                        fontSize: 12,
-                        color: sld > 0 ? TOKENS.amber : TOKENS.green,
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
+                    <td style={{ padding: '11px 10px', fontFamily: 'ui-monospace, monospace', fontSize: 13, color: sld > 0 ? TOKENS.amber : TOKENS.green, whiteSpace: 'nowrap' }}>
                       {fmtMoney(sld)}
                     </td>
-                    <td style={{ padding: '10px 10px' }}>
-                      <Chip color={STATUS_COLORS[p.status] || 'gray'} size="xs">
-                        {p.status}
-                      </Chip>
+                    <td style={{ padding: '11px 10px' }}>
+                      <Chip color={STATUS_COLORS[p.status] || 'gray'} size="xs">{p.status}</Chip>
                     </td>
-                    <td style={{ padding: '10px 10px' }}>
-                      {alertas.length > 0 && (
-                        <Chip color="red" size="xs">⚡ {alertas[0].label}</Chip>
-                      )}
+                    <td style={{ padding: '11px 10px' }}>
+                      {alertas.length > 0 && <Chip color="red" size="xs">⚡ {alertas[0].label}</Chip>}
                     </td>
-                    <td style={{ padding: '10px 6px' }}>
+                    <td style={{ padding: '11px 6px' }}>
                       <a
                         href={whatsAppCobranca(p)}
                         target="_blank"
