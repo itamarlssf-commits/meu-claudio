@@ -1,19 +1,69 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 * { box-sizing: border-box; }
 html, body { height: 100%; }
-body { background: #fafaf7; color: #1a1f2e; -webkit-font-smoothing: antialiased; }
 
-::-webkit-scrollbar { width: 8px; height: 8px; }
+body {
+  background: #fafaf7;
+  color: #1a1f2e;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
+::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
 ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
 
+/* Focus */
 input:focus, select:focus, textarea:focus {
   outline: none;
   border-color: #1f3a5f !important;
-  box-shadow: 0 0 0 3px rgba(31, 58, 95, 0.18);
+  box-shadow: 0 0 0 3px rgba(31, 58, 95, 0.15) !important;
 }
+
+/* Button press */
 button:active { transform: translateY(1px); }
+
+/* Sidebar nav item hover */
+.nav-item:hover:not(.nav-active) {
+  background: #f0f4f8 !important;
+  color: #1f3a5f !important;
+}
+
+/* Table row hover */
+.data-row:hover {
+  background: #f7f9fc !important;
+  cursor: pointer;
+}
+
+/* Card hover (clickable cards) */
+.card-hover:hover {
+  box-shadow: 0 4px 20px rgba(31, 58, 95, 0.10) !important;
+  transform: translateY(-1px);
+  transition: all 0.2s ease !important;
+}
+
+/* Smooth transitions */
+a, button { transition: opacity 0.15s, background 0.15s, box-shadow 0.15s, transform 0.1s; }
+
+/* Monospace numbers (financial data) */
+.num {
+  font-family: 'Inter', ui-monospace, monospace;
+  font-feature-settings: "tnum";
+}
+
+/* Alert row */
+.alert-row {
+  transition: box-shadow 0.15s, transform 0.1s;
+}
+.alert-row:hover {
+  box-shadow: 0 2px 12px rgba(245, 158, 11, 0.15);
+  transform: translateY(-1px);
+}

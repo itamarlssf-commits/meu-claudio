@@ -55,21 +55,39 @@ export default function Dashboard({ data, onOpenPaciente }: Props) {
 
   return (
     <div style={{ padding: '24px 28px', maxWidth: 1100, display: 'flex', flexDirection: 'column', gap: 24 }}>
-      <div>
-        <h1
+      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+        <div>
+          <h1
+            style={{
+              fontSize: 22,
+              fontWeight: 700,
+              color: TOKENS.primary,
+              margin: 0,
+              letterSpacing: '-0.02em',
+            }}
+          >
+            Visão Geral
+          </h1>
+          <p style={{ fontSize: 13, color: TOKENS.muted, marginTop: 4, marginBottom: 0 }}>
+            {new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+          </p>
+        </div>
+        <div
           style={{
-            fontFamily: "Georgia, 'Times New Roman', serif",
-            fontSize: 22,
-            fontWeight: 700,
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
+            background: `${TOKENS.primary}0d`,
+            border: `1px solid ${TOKENS.primary}25`,
+            borderRadius: 20,
+            padding: '5px 14px',
+            fontSize: 12,
+            fontWeight: 600,
             color: TOKENS.primary,
-            margin: 0,
           }}
         >
-          Visão Geral
-        </h1>
-        <p style={{ fontSize: 13, color: TOKENS.muted, marginTop: 4, marginBottom: 0 }}>
-          {pacientes.length} pacientes · {new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}
-        </p>
+          {pacientes.length} pacientes
+        </div>
       </div>
 
       {/* KPIs */}
@@ -102,7 +120,7 @@ export default function Dashboard({ data, onOpenPaciente }: Props) {
         />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
         {/* Status breakdown */}
         <Card>
           <SectionHeader title="Status Financeiro" />

@@ -13,23 +13,25 @@ export default function Mini({ label, value, color = TOKENS.ink }: MiniProps) {
     <div
       style={{
         background: TOKENS.line2,
-        borderRadius: 8,
-        padding: '8px 12px',
-        minWidth: 80,
+        border: `1px solid ${TOKENS.line}`,
+        borderRadius: 10,
+        padding: '8px 14px',
+        minWidth: 84,
         textAlign: 'center',
       }}
     >
       <div
         style={{
-          fontSize: 15,
+          fontSize: 16,
           fontWeight: 700,
-          fontFamily: 'ui-monospace, monospace',
           color,
+          letterSpacing: '-0.01em',
+          fontFeatureSettings: '"tnum"',
         }}
       >
         {value}
       </div>
-      <div style={{ fontSize: 9, color: TOKENS.muted, marginTop: 1, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+      <div style={{ fontSize: 9, color: TOKENS.muted, marginTop: 2, textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600 }}>
         {label}
       </div>
     </div>

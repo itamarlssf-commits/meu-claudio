@@ -5,7 +5,6 @@ import type { User } from 'firebase/auth';
 import type { AppData } from '@/types/paciente';
 import { TOKENS } from '@/lib/tokens';
 import { alertasCobrancaDPP } from '@/lib/business-logic';
-import { signOutUser } from '@/lib/firebase';
 
 interface NavItem {
   id: string;
@@ -14,11 +13,11 @@ interface NavItem {
 }
 
 const NAV: NavItem[] = [
-  { id: 'dashboard', label: 'Visão Geral', icon: '📊' },
-  { id: 'pacientes', label: 'Pacientes', icon: '👤' },
-  { id: 'financeiro', label: 'Financeiro', icon: '💰' },
-  { id: 'agenda', label: 'Agenda', icon: '📅' },
-  { id: 'alertas', label: 'Alertas', icon: '⚡' },
+  { id: 'dashboard',  label: 'Visão Geral', icon: '◉' },
+  { id: 'pacientes',  label: 'Pacientes',   icon: '♀' },
+  { id: 'financeiro', label: 'Financeiro',  icon: '₊' },
+  { id: 'agenda',     label: 'Agenda',      icon: '◷' },
+  { id: 'alertas',    label: 'Alertas',     icon: '◈' },
 ];
 
 interface SidebarProps {
@@ -33,12 +32,8 @@ interface SidebarProps {
 export default function Sidebar({ view, onNav, data, user, syncStatus, onSignOut }: SidebarProps) {
   const importRef = useRef<HTMLInputElement>(null);
 
-  const alertasCount = data.pacientes.filter(
-    (p) => alertasCobrancaDPP(p).length > 0
-  ).length;
-  const pendentesCount = data.pacientes.filter(
-    (p) => p.status === 'pendente' || p.status === 'parcial'
-  ).length;
+  const alertasCount = data.pacientes.filter((p) => alertasCobrancaDPP(p).length > 0).length;
+  const pendentesCount = data.pacientes.filter((p) => p.status === 'pendente' || p.status === 'parcial').length;
 
   function handleExport() {
     const json = JSON.stringify(data, null, 2);
@@ -70,17 +65,14 @@ export default function Sidebar({ view, onNav, data, user, syncStatus, onSignOut
     e.target.value = '';
   }
 
-  const syncDot: Record<string, string> = {
-    live: TOKENS.green,
-    connecting: TOKENS.amber,
-    offline: TOKENS.red,
-  };
+  const syncColor = { live: TOKENS.green, connecting: TOKENS.amber, offline: TOKENS.red };
+  const syncLabel = { live: 'Sincronizado', connecting: 'Conectando…', offline: 'Offline' };
 
   return (
     <aside
       style={{
-        width: 230,
-        minWidth: 230,
+        width: 236,
+        minWidth: 236,
         background: '#ffffff',
         borderRight: `1px solid ${TOKENS.line}`,
         height: '100vh',
@@ -90,82 +82,121 @@ export default function Sidebar({ view, onNav, data, user, syncStatus, onSignOut
         flexDirection: 'column',
         overflowY: 'auto',
         flexShrink: 0,
+        boxShadow: '2px 0 12px rgba(0,0,0,0.04)',
       }}
     >
       {/* Branding */}
       <div
         style={{
-          padding: '22px 18px 16px',
-          borderBottom: `1px solid ${TOKENS.line2}`,
+          padding: '24px 20px 20px',
+          background: `linear-gradient(135deg, ${TOKENS.primary} 0%, #2c4a7c 100%)`,
+          borderBottom: '3px solid #b8915a',
         }}
       >
         <div
           style={{
-            fontFamily: "Georgia, 'Times New Roman', serif",
-            fontSize: 15,
+            width: 40,
+            height: 40,
+            borderRadius: 12,
+            background: 'rgba(184,145,90,0.25)',
+            border: '1.5px solid rgba(184,145,90,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: 12,
+            fontSize: 16,
             fontWeight: 700,
-            color: TOKENS.primary,
+            color: TOKENS.accent2,
+            fontFamily: "Georgia, 'Times New Roman', serif",
+          }}
+        >
+          IS
+        </div>
+        <div
+          style={{
+            fontSize: 14,
+            fontWeight: 700,
+            color: '#ffffff',
             lineHeight: 1.2,
+            letterSpacing: '-0.01em',
           }}
         >
           Dr. Itamar Santana
         </div>
         <div
           style={{
-            fontSize: 9,
-            fontWeight: 700,
+            fontSize: 10,
+            fontWeight: 500,
             textTransform: 'uppercase',
             letterSpacing: '0.08em',
-            color: TOKENS.muted,
-            marginTop: 3,
+            color: 'rgba(255,255,255,0.55)',
+            marginTop: 4,
           }}
         >
-          Consultório · Painel
+          Ginecologia · Obstetrícia
         </div>
       </div>
 
       {/* Nav */}
-      <nav style={{ padding: '10px 10px', flex: 1 }}>
+      <nav style={{ padding: '12px 10px', flex: 1 }}>
         {NAV.map((item) => {
           const active = view === item.id;
           return (
             <button
               key={item.id}
               onClick={() => onNav(item.id)}
+              className={active ? 'nav-active' : 'nav-item'}
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: 10,
                 width: '100%',
-                padding: '9px 10px',
-                borderRadius: 8,
+                padding: '9px 12px',
+                borderRadius: 10,
                 border: 'none',
                 cursor: 'pointer',
                 fontFamily: 'inherit',
                 fontSize: 13,
-                fontWeight: active ? 700 : 500,
-                background: active ? TOKENS.primary : 'transparent',
-                color: active ? '#fff' : TOKENS.ink2,
+                fontWeight: active ? 600 : 400,
+                background: active ? `${TOKENS.primary}12` : 'transparent',
+                color: active ? TOKENS.primary : TOKENS.ink2,
                 marginBottom: 2,
                 transition: 'all 0.15s',
                 textAlign: 'left',
                 justifyContent: 'space-between',
+                borderLeft: active ? `3px solid ${TOKENS.primary}` : '3px solid transparent',
               }}
             >
               <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ fontSize: 16 }}>{item.icon}</span>
+                <span
+                  style={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: 8,
+                    background: active ? TOKENS.primary : TOKENS.line2,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 14,
+                    color: active ? '#fff' : TOKENS.muted,
+                    flexShrink: 0,
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  {item.icon}
+                </span>
                 {item.label}
               </span>
               {item.id === 'alertas' && alertasCount > 0 && (
                 <span
                   style={{
-                    background: active ? 'rgba(255,255,255,0.3)' : TOKENS.red,
+                    background: active ? TOKENS.primary : TOKENS.red,
                     color: '#fff',
-                    borderRadius: 10,
+                    borderRadius: 20,
                     fontSize: 10,
                     fontWeight: 700,
-                    padding: '1px 6px',
-                    minWidth: 18,
+                    padding: '1px 7px',
+                    minWidth: 20,
                     textAlign: 'center',
                   }}
                 >
@@ -175,13 +206,13 @@ export default function Sidebar({ view, onNav, data, user, syncStatus, onSignOut
               {item.id === 'pacientes' && pendentesCount > 0 && (
                 <span
                   style={{
-                    background: active ? 'rgba(255,255,255,0.3)' : TOKENS.line,
-                    color: active ? '#fff' : TOKENS.ink2,
-                    borderRadius: 10,
+                    background: active ? `rgba(31,58,95,0.2)` : TOKENS.amberSoft,
+                    color: active ? TOKENS.primary : TOKENS.amber,
+                    borderRadius: 20,
                     fontSize: 10,
                     fontWeight: 700,
-                    padding: '1px 6px',
-                    minWidth: 18,
+                    padding: '1px 7px',
+                    minWidth: 20,
                     textAlign: 'center',
                   }}
                 >
@@ -193,26 +224,27 @@ export default function Sidebar({ view, onNav, data, user, syncStatus, onSignOut
         })}
       </nav>
 
-      {/* Backup card */}
+      {/* Backup */}
       <div
         style={{
           margin: '0 10px 10px',
-          padding: '12px 12px',
+          padding: '12px 14px',
           background: TOKENS.line2,
-          borderRadius: 10,
+          borderRadius: 12,
+          border: `1px solid ${TOKENS.line}`,
         }}
       >
         <div
           style={{
-            fontSize: 10,
+            fontSize: 9,
             fontWeight: 700,
             color: TOKENS.muted,
             textTransform: 'uppercase',
-            letterSpacing: '0.05em',
+            letterSpacing: '0.07em',
             marginBottom: 8,
           }}
         >
-          Backup
+          Backup de dados
         </div>
         <div style={{ display: 'flex', gap: 6 }}>
           <button
@@ -222,8 +254,8 @@ export default function Sidebar({ view, onNav, data, user, syncStatus, onSignOut
               fontSize: 11,
               fontWeight: 600,
               padding: '6px 8px',
-              borderRadius: 6,
-              border: `1.5px solid ${TOKENS.line}`,
+              borderRadius: 7,
+              border: `1px solid ${TOKENS.line}`,
               background: '#fff',
               color: TOKENS.ink2,
               cursor: 'pointer',
@@ -239,8 +271,8 @@ export default function Sidebar({ view, onNav, data, user, syncStatus, onSignOut
               fontSize: 11,
               fontWeight: 600,
               padding: '6px 8px',
-              borderRadius: 6,
-              border: `1.5px solid ${TOKENS.line}`,
+              borderRadius: 7,
+              border: `1px solid ${TOKENS.line}`,
               background: '#fff',
               color: TOKENS.ink2,
               cursor: 'pointer',
@@ -249,62 +281,77 @@ export default function Sidebar({ view, onNav, data, user, syncStatus, onSignOut
           >
             ↑ Importar
           </button>
-          <input
-            ref={importRef}
-            type="file"
-            accept=".json"
-            style={{ display: 'none' }}
-            onChange={handleImport}
-          />
+          <input ref={importRef} type="file" accept=".json" style={{ display: 'none' }} onChange={handleImport} />
         </div>
       </div>
 
-      {/* Sync status + user */}
+      {/* Footer: sync + user */}
       <div
         style={{
-          padding: '10px 14px',
+          padding: '12px 14px',
           borderTop: `1px solid ${TOKENS.line2}`,
           display: 'flex',
           flexDirection: 'column',
-          gap: 8,
+          gap: 10,
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        {/* Sync pill */}
+        <div
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
+            background: `${syncColor[syncStatus]}15`,
+            border: `1px solid ${syncColor[syncStatus]}30`,
+            borderRadius: 20,
+            padding: '4px 10px',
+            width: 'fit-content',
+          }}
+        >
           <div
             style={{
-              width: 7,
-              height: 7,
+              width: 6,
+              height: 6,
               borderRadius: '50%',
-              background: syncDot[syncStatus] || TOKENS.muted,
+              background: syncColor[syncStatus],
               flexShrink: 0,
             }}
           />
-          <span style={{ fontSize: 11, color: TOKENS.muted }}>
-            {syncStatus === 'live' ? 'Sincronizado' : syncStatus === 'connecting' ? 'Conectando…' : 'Offline'}
+          <span style={{ fontSize: 10, fontWeight: 600, color: syncColor[syncStatus] }}>
+            {syncLabel[syncStatus]}
           </span>
         </div>
-        {user && (
-          <div style={{ fontSize: 11, color: TOKENS.muted, wordBreak: 'break-all' }}>
-            {user.email}
-          </div>
-        )}
-        <button
-          onClick={onSignOut}
+
+        {/* User + sign out */}
+        <div
           style={{
-            fontSize: 11,
-            fontWeight: 600,
-            padding: '5px 10px',
-            borderRadius: 6,
-            border: `1.5px solid ${TOKENS.line}`,
-            background: 'transparent',
-            color: TOKENS.ink2,
-            cursor: 'pointer',
-            fontFamily: 'inherit',
-            textAlign: 'left',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 8,
           }}
         >
-          Sair
-        </button>
+          <div style={{ fontSize: 10, color: TOKENS.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+            {user?.email}
+          </div>
+          <button
+            onClick={onSignOut}
+            style={{
+              fontSize: 10,
+              fontWeight: 600,
+              padding: '4px 10px',
+              borderRadius: 6,
+              border: `1px solid ${TOKENS.line}`,
+              background: 'transparent',
+              color: TOKENS.muted,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+              flexShrink: 0,
+            }}
+          >
+            Sair
+          </button>
+        </div>
       </div>
     </aside>
   );
