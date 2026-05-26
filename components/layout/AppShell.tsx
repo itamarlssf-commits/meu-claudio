@@ -3,12 +3,14 @@
 import { useAppStore } from '@/store/use-app-store';
 import { signOutUser } from '@/lib/firebase';
 import useData from '@/hooks/useData';
+import { isRetornoOverdue } from '@/lib/leads-logic';
 import Sidebar from './Sidebar';
 import Dashboard from '@/components/views/Dashboard';
 import PacientesView from '@/components/views/PacientesView';
 import FinanceiroView from '@/components/views/FinanceiroView';
 import AgendaView from '@/components/views/AgendaView';
 import AlertasView from '@/components/views/AlertasView';
+import AtendimentoView from '@/components/views/AtendimentoView';
 import PacienteModal from '@/components/paciente/PacienteModal';
 
 export default function AppShell() {
@@ -19,6 +21,8 @@ export default function AppShell() {
   const user = useAppStore((s) => s.user);
   const syncStatus = useAppStore((s) => s.syncStatus);
   const { data, setData } = useData();
+  const leads = useAppStore((s) => s.leads);
+  const leadsOverdue = leads.filter(isRetornoOverdue).length;
 
   async function handleSignOut() {
     await signOutUser();
@@ -38,6 +42,7 @@ export default function AppShell() {
         user={user}
         syncStatus={syncStatus}
         onSignOut={handleSignOut}
+        leadsOverdueCount={leadsOverdue}
       />
 
       <main style={{ flex: 1, overflowY: 'auto', minWidth: 0 }}>
@@ -55,6 +60,9 @@ export default function AppShell() {
         )}
         {view === 'alertas' && (
           <AlertasView data={data} setData={setData} onOpenPaciente={openPaciente} />
+        )}
+        {view === 'atendimento' && (
+          <AtendimentoView data={data} setData={setData} />
         )}
       </main>
 

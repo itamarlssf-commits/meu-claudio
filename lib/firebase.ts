@@ -8,11 +8,16 @@ import {
 import {
   getFirestore,
   doc,
+  collection,
+  query,
+  orderBy,
   onSnapshot,
   setDoc,
+  deleteDoc,
   serverTimestamp,
 } from 'firebase/firestore';
 import type { AppData } from '@/types/paciente';
+import type { Lead } from '@/types/lead';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -55,4 +60,28 @@ export async function saveData(data: AppData, userEmail: string): Promise<void> 
     updatedAt: serverTimestamp(),
     updatedBy: userEmail,
   });
+}
+
+// ── Leads collection ───────────────────────────────────────────────
+
+const LEADS_COL = collection(db, 'leads');
+
+export function subscribeLeads(cb: (leads: Lead[]) => void): () => void {
+  const q = query(LEADS_COL, orderBy('timestamp', 'desc'));
+  return onSnapshot(q, (snap) => {
+    cb(snap.docs.map((d) => ({ ...d.data(), id: d.id } as Lead)));
+  });
+}
+
+export async function saveLead(lead: Lead, userEmail: string): Promise<void> {
+  const { id, ...rest } = lead;
+  await setDoc(doc(db, 'leads', id), {
+    ...rest,
+    updatedAt: serverTimestamp(),
+    updatedBy: userEmail,
+  });
+}
+
+export async function deleteLead(id: string): Promise<void> {
+  await deleteDoc(doc(db, 'leads', id));
 }
