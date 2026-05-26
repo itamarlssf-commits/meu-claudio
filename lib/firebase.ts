@@ -12,7 +12,14 @@ import {
   setDoc,
   serverTimestamp,
 } from 'firebase/firestore';
+import {
+  getStorage,
+  ref as storageRef,
+  uploadBytes,
+  getDownloadURL,
+} from 'firebase/storage';
 import type { AppData } from '@/types/paciente';
+import type { ReformaData } from '@/types/reforma';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -27,7 +34,9 @@ const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0
 
 export const auth = getAuth(app);
 export const db = getFirestore(app);
+export const storage = getStorage(app);
 export const DOC_REF = doc(db, 'consultorio', 'principal');
+export const REFORMA_REF = doc(db, 'consultorio', 'reforma');
 
 export async function signIn(email: string, senha: string): Promise<User> {
   const cred = await signInWithEmailAndPassword(auth, email, senha);
@@ -55,4 +64,36 @@ export async function saveData(data: AppData, userEmail: string): Promise<void> 
     updatedAt: serverTimestamp(),
     updatedBy: userEmail,
   });
+}
+
+export function subscribeReforma(cb: (data: ReformaData | null) => void): () => void {
+  return onSnapshot(REFORMA_REF, (snap) => {
+    if (snap.exists()) {
+      cb((snap.data()?.payload as ReformaData) ?? null);
+    } else {
+      cb(null);
+    }
+  });
+}
+
+export async function saveReforma(data: ReformaData, userEmail: string): Promise<void> {
+  await setDoc(REFORMA_REF, {
+    payload: data,
+    updatedAt: serverTimestamp(),
+    updatedBy: userEmail,
+  });
+}
+
+export async function uploadContrato(gastoId: string, file: File): Promise<string> {
+  const path = `reforma/contratos/${gastoId}/${file.name}`;
+  const ref = storageRef(storage, path);
+  await uploadBytes(ref, file);
+  return getDownloadURL(ref);
+}
+
+export async function uploadComprovante(gastoId: string, parcelaId: string, file: File): Promise<string> {
+  const path = `reforma/comprovantes/${gastoId}/${parcelaId}/${file.name}`;
+  const ref = storageRef(storage, path);
+  await uploadBytes(ref, file);
+  return getDownloadURL(ref);
 }
