@@ -1,10 +1,13 @@
 import { create } from 'zustand';
 import type { User } from 'firebase/auth';
 import type { AppData } from '@/types/paciente';
+import type { ReformaData } from '@/types/reforma';
 import { DEFAULT_DATA, saveDataLocal } from '@/lib/business-logic';
+import { REFORMA_DEFAULT } from '@/types/reforma';
 
 interface AppStore {
   data: AppData;
+  reforma: ReformaData;
   view: string;
   openPacienteId: string | null;
   filterStatus: string;
@@ -13,6 +16,7 @@ interface AppStore {
   authReady: boolean;
 
   setData: (data: AppData) => void;
+  setReforma: (data: ReformaData) => void;
   setView: (view: string) => void;
   setOpenPacienteId: (id: string | null) => void;
   setFilterStatus: (status: string) => void;
@@ -25,6 +29,7 @@ interface AppStore {
 
 export const useAppStore = create<AppStore>((set, get) => ({
   data: DEFAULT_DATA,
+  reforma: REFORMA_DEFAULT,
   view: 'dashboard',
   openPacienteId: null,
   filterStatus: 'all',
@@ -36,6 +41,8 @@ export const useAppStore = create<AppStore>((set, get) => ({
     set({ data });
     saveDataLocal(data);
   },
+
+  setReforma: (reforma) => set({ reforma }),
 
   setView: (view) => set({ view }),
   setOpenPacienteId: (id) => set({ openPacienteId: id }),

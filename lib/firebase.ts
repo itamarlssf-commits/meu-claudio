@@ -13,6 +13,7 @@ import {
   serverTimestamp,
 } from 'firebase/firestore';
 import type { AppData } from '@/types/paciente';
+import type { ReformaData } from '@/types/reforma';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -28,6 +29,7 @@ const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const DOC_REF = doc(db, 'consultorio', 'principal');
+export const REFORMA_REF = doc(db, 'consultorio', 'reforma');
 
 export async function signIn(email: string, senha: string): Promise<User> {
   const cred = await signInWithEmailAndPassword(auth, email, senha);
@@ -51,6 +53,24 @@ export function subscribeData(cb: (data: AppData | null) => void): () => void {
 
 export async function saveData(data: AppData, userEmail: string): Promise<void> {
   await setDoc(DOC_REF, {
+    payload: data,
+    updatedAt: serverTimestamp(),
+    updatedBy: userEmail,
+  });
+}
+
+export function subscribeReforma(cb: (data: ReformaData | null) => void): () => void {
+  return onSnapshot(REFORMA_REF, (snap) => {
+    if (snap.exists()) {
+      cb((snap.data()?.payload as ReformaData) ?? null);
+    } else {
+      cb(null);
+    }
+  });
+}
+
+export async function saveReforma(data: ReformaData, userEmail: string): Promise<void> {
+  await setDoc(REFORMA_REF, {
     payload: data,
     updatedAt: serverTimestamp(),
     updatedBy: userEmail,

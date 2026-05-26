@@ -9,6 +9,7 @@ import PacientesView from '@/components/views/PacientesView';
 import FinanceiroView from '@/components/views/FinanceiroView';
 import AgendaView from '@/components/views/AgendaView';
 import AlertasView from '@/components/views/AlertasView';
+import ReformaView from '@/components/views/ReformaView';
 import PacienteModal from '@/components/paciente/PacienteModal';
 
 export default function AppShell() {
@@ -55,6 +56,9 @@ export default function AppShell() {
         )}
         {view === 'alertas' && (
           <AlertasView data={data} setData={setData} onOpenPaciente={openPaciente} />
+        )}
+        {view === 'reforma' && (
+          <ReformaView />
         )}
       </main>
 
