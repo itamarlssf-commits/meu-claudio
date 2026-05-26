@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { TOKENS } from '@/lib/tokens';
 import { fmtMoney, fmtDate } from '@/lib/business-logic';
+import { uploadComprovante } from '@/lib/firebase';
 import useReforma from '@/hooks/useReforma';
 import GastoModal from '@/components/reforma/GastoModal';
 import ContribuicaoModal from '@/components/reforma/ContribuicaoModal';
@@ -57,14 +58,29 @@ export default function ReformaView() {
     setReforma({ ...reforma, gastos: reforma.gastos.filter((g) => g.id !== id) });
   }
 
-  function toggleParcela(gastoId: string, parcelaId: string, pago: boolean) {
+  async function toggleParcela(gastoId: string, parcelaId: string, pago: boolean, comprovanteFile?: File | null) {
+    let comprovanteUrl: string | undefined;
+    if (pago && comprovanteFile) {
+      try {
+        comprovanteUrl = await uploadComprovante(gastoId, parcelaId, comprovanteFile);
+      } catch {
+        // upload falhou, segue sem comprovante
+      }
+    }
     const gastos = reforma.gastos.map((g) =>
       g.id !== gastoId
         ? g
         : {
             ...g,
             parcelas: g.parcelas.map((p) =>
-              p.id !== parcelaId ? p : { ...p, pago, dataPagamento: pago ? hoje() : undefined },
+              p.id !== parcelaId
+                ? p
+                : {
+                    ...p,
+                    pago,
+                    dataPagamento: pago ? hoje() : undefined,
+                    comprovanteUrl: pago ? (comprovanteUrl ?? p.comprovanteUrl) : undefined,
+                  },
             ),
           },
     );
@@ -268,7 +284,7 @@ export default function ReformaView() {
                 gasto={g}
                 onEdit={() => { setGastoEditando(g); setModalGasto(true); }}
                 onDelete={() => removerGasto(g.id)}
-                onToggleParcela={(parcelaId, pago) => toggleParcela(g.id, parcelaId, pago)}
+                onToggleParcela={(parcelaId, pago, file) => toggleParcela(g.id, parcelaId, pago, file)}
               />
             ))
           )}

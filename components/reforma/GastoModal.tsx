@@ -1,11 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Modal from '@/components/ui/Modal';
+import MicButton from '@/components/reforma/MicButton';
 import { TOKENS } from '@/lib/tokens';
 import { CATEGORIAS } from '@/types/reforma';
 import type { Gasto, Parcela, CategoriaReforma } from '@/types/reforma';
 import { fmtMoney } from '@/lib/business-logic';
+import { uploadContrato } from '@/lib/firebase';
 
 interface Props {
   open: boolean;
@@ -29,6 +31,7 @@ interface ParcelaForm {
   vencimento: string;
   pago: boolean;
   dataPagamento: string;
+  comprovanteUrl?: string;
 }
 
 export default function GastoModal({ open, onClose, onSave, inicial }: Props) {
@@ -39,6 +42,10 @@ export default function GastoModal({ open, onClose, onSave, inicial }: Props) {
   const [parcelas, setParcelas] = useState<ParcelaForm[]>([
     { id: uid(), numero: 0, valor: '', vencimento: hoje(), pago: false, dataPagamento: '' },
   ]);
+  const [contratoFile, setContratoFile] = useState<File | null>(null);
+  const [contratoUrlAtual, setContratoUrlAtual] = useState<string | undefined>();
+  const [saving, setSaving] = useState(false);
+  const contratoRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (inicial) {
@@ -46,6 +53,8 @@ export default function GastoModal({ open, onClose, onSave, inicial }: Props) {
       setCategoria(inicial.categoria);
       setFornecedor(inicial.fornecedor);
       setObservacoes(inicial.observacoes ?? '');
+      setContratoUrlAtual(inicial.contratoUrl);
+      setContratoFile(null);
       setParcelas(
         inicial.parcelas.map((p) => ({
           id: p.id,
@@ -54,6 +63,7 @@ export default function GastoModal({ open, onClose, onSave, inicial }: Props) {
           vencimento: p.vencimento,
           pago: p.pago,
           dataPagamento: p.dataPagamento ?? '',
+          comprovanteUrl: p.comprovanteUrl,
         })),
       );
     } else {
@@ -61,12 +71,14 @@ export default function GastoModal({ open, onClose, onSave, inicial }: Props) {
       setCategoria('Engenharia');
       setFornecedor('');
       setObservacoes('');
+      setContratoUrlAtual(undefined);
+      setContratoFile(null);
       setParcelas([{ id: uid(), numero: 0, valor: '', vencimento: hoje(), pago: false, dataPagamento: '' }]);
     }
   }, [inicial, open]);
 
   function addParcela() {
-    const next = parcelas.length; // 0 = entrada, 1,2... = parcelas
+    const next = parcelas.length;
     setParcelas((prev) => [...prev, { id: uid(), numero: next, valor: '', vencimento: '', pago: false, dataPagamento: '' }]);
   }
 
@@ -82,29 +94,43 @@ export default function GastoModal({ open, onClose, onSave, inicial }: Props) {
     setParcelas((prev) => prev.map((p) => (p.id === id ? { ...p, [field]: value } : p)));
   }
 
-  function handleSave() {
+  async function handleSave() {
     if (!descricao.trim() || !fornecedor.trim()) return;
-    const gastoFinal: Gasto = {
-      id: inicial?.id ?? uid(),
-      descricao: descricao.trim(),
-      categoria,
-      fornecedor: fornecedor.trim(),
-      observacoes: observacoes.trim() || undefined,
-      criadoEm: inicial?.criadoEm ?? hoje(),
-      parcelas: parcelas.map((p) => ({
-        id: p.id,
-        numero: p.numero,
-        valor: parseFloat(p.valor.replace(',', '.')) || 0,
-        vencimento: p.vencimento || hoje(),
-        pago: p.pago,
-        dataPagamento: p.pago && p.dataPagamento ? p.dataPagamento : undefined,
-      })),
-    };
-    onSave(gastoFinal);
-    onClose();
+    setSaving(true);
+    try {
+      const gastoId = inicial?.id ?? uid();
+      let contratoUrl = contratoUrlAtual;
+      if (contratoFile) {
+        contratoUrl = await uploadContrato(gastoId, contratoFile);
+      }
+
+      const gastoFinal: Gasto = {
+        id: gastoId,
+        descricao: descricao.trim(),
+        categoria,
+        fornecedor: fornecedor.trim(),
+        observacoes: observacoes.trim() || undefined,
+        contratoUrl,
+        criadoEm: inicial?.criadoEm ?? hoje(),
+        parcelas: parcelas.map((p) => ({
+          id: p.id,
+          numero: p.numero,
+          valor: parseFloat(p.valor.replace(',', '.')) || 0,
+          vencimento: p.vencimento || hoje(),
+          pago: p.pago,
+          dataPagamento: p.pago && p.dataPagamento ? p.dataPagamento : undefined,
+          comprovanteUrl: p.comprovanteUrl,
+        })),
+      };
+      onSave(gastoFinal);
+      onClose();
+    } finally {
+      setSaving(false);
+    }
   }
 
   const totalGasto = parcelas.reduce((s, p) => s + (parseFloat(p.valor.replace(',', '.')) || 0), 0);
+  const podesSalvar = !saving && descricao.trim().length > 0 && fornecedor.trim().length > 0;
 
   const fieldStyle = {
     width: '100%',
@@ -130,12 +156,21 @@ export default function GastoModal({ open, onClose, onSave, inicial }: Props) {
   };
 
   return (
-    <Modal open={open} onClose={onClose} title={inicial ? 'Editar Gasto' : 'Novo Gasto'} width={560}>
+    <Modal open={open} onClose={onClose} title={inicial ? 'Editar Gasto' : 'Novo Gasto'} width={580}>
       <div style={{ padding: 22, display: 'flex', flexDirection: 'column', gap: 16 }}>
-        {/* Descrição */}
+
+        {/* Descrição + Mic */}
         <div>
           <label style={labelStyle}>Descrição *</label>
-          <input style={fieldStyle} value={descricao} onChange={(e) => setDescricao(e.target.value)} placeholder="Ex: Contrato de engenharia civil" />
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+            <input
+              style={fieldStyle}
+              value={descricao}
+              onChange={(e) => setDescricao(e.target.value)}
+              placeholder="Ex: Contrato de engenharia civil"
+            />
+            <MicButton onResult={(t) => setDescricao((v) => v ? v + ' ' + t : t)} />
+          </div>
         </div>
 
         {/* Categoria + Fornecedor */}
@@ -150,7 +185,64 @@ export default function GastoModal({ open, onClose, onSave, inicial }: Props) {
           </div>
           <div>
             <label style={labelStyle}>Fornecedor *</label>
-            <input style={fieldStyle} value={fornecedor} onChange={(e) => setFornecedor(e.target.value)} placeholder="Nome da empresa" />
+            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+              <input
+                style={fieldStyle}
+                value={fornecedor}
+                onChange={(e) => setFornecedor(e.target.value)}
+                placeholder="Nome da empresa"
+              />
+              <MicButton onResult={(t) => setFornecedor((v) => v ? v + ' ' + t : t)} />
+            </div>
+          </div>
+        </div>
+
+        {/* Contrato */}
+        <div>
+          <label style={labelStyle}>Contrato (PDF ou imagem)</label>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <button
+              type="button"
+              onClick={() => contratoRef.current?.click()}
+              style={{
+                padding: '8px 14px', borderRadius: 8, border: `1.5px dashed ${TOKENS.line}`,
+                background: TOKENS.line2, color: TOKENS.ink2, cursor: 'pointer',
+                fontFamily: 'inherit', fontSize: 12, fontWeight: 600,
+              }}
+            >
+              📎 {contratoFile ? contratoFile.name : 'Selecionar arquivo'}
+            </button>
+            {(contratoUrlAtual || contratoFile) && (
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                {contratoUrlAtual && !contratoFile && (
+                  <a
+                    href={contratoUrlAtual}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ fontSize: 12, color: TOKENS.primary, textDecoration: 'underline' }}
+                  >
+                    Ver contrato atual
+                  </a>
+                )}
+                {contratoFile && (
+                  <span style={{ fontSize: 12, color: TOKENS.green }}>✓ Novo arquivo selecionado</span>
+                )}
+                <button
+                  type="button"
+                  onClick={() => { setContratoFile(null); setContratoUrlAtual(undefined); if (contratoRef.current) contratoRef.current.value = ''; }}
+                  style={{ fontSize: 12, color: TOKENS.muted, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                >
+                  Remover
+                </button>
+              </div>
+            )}
+            <input
+              ref={contratoRef}
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png,.webp"
+              style={{ display: 'none' }}
+              onChange={(e) => setContratoFile(e.target.files?.[0] ?? null)}
+            />
           </div>
         </div>
 
@@ -163,7 +255,6 @@ export default function GastoModal({ open, onClose, onSave, inicial }: Props) {
             </span>
           </div>
 
-          {/* Header */}
           <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr 1fr 60px 24px', gap: 6, marginBottom: 4 }}>
             {['#', 'Valor (R$)', 'Vencimento', 'Pago?', ''].map((h) => (
               <span key={h} style={{ fontSize: 10, fontWeight: 700, color: TOKENS.muted, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</span>
@@ -199,6 +290,7 @@ export default function GastoModal({ open, onClose, onSave, inicial }: Props) {
                 />
               </div>
               <button
+                type="button"
                 onClick={() => removeParcela(p.id)}
                 style={{ background: 'none', border: 'none', cursor: 'pointer', color: TOKENS.muted, fontSize: 16, padding: 0 }}
               >
@@ -208,40 +300,38 @@ export default function GastoModal({ open, onClose, onSave, inicial }: Props) {
           ))}
 
           <button
+            type="button"
             onClick={addParcela}
             style={{
-              marginTop: 4,
-              fontSize: 12,
-              fontWeight: 600,
-              color: TOKENS.primary,
-              background: `${TOKENS.primary}10`,
-              border: `1px dashed ${TOKENS.primary}40`,
-              borderRadius: 8,
-              padding: '7px 14px',
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-              width: '100%',
+              marginTop: 4, fontSize: 12, fontWeight: 600, color: TOKENS.primary,
+              background: `${TOKENS.primary}10`, border: `1px dashed ${TOKENS.primary}40`,
+              borderRadius: 8, padding: '7px 14px', cursor: 'pointer', fontFamily: 'inherit', width: '100%',
             }}
           >
             + Adicionar parcela
           </button>
         </div>
 
-        {/* Observações */}
+        {/* Observações + Mic */}
         <div>
           <label style={labelStyle}>Observações</label>
-          <textarea
-            style={{ ...fieldStyle, resize: 'vertical', minHeight: 60 }}
-            value={observacoes}
-            onChange={(e) => setObservacoes(e.target.value)}
-            placeholder="Notas adicionais..."
-          />
+          <div style={{ display: 'flex', gap: 6, alignItems: 'flex-start' }}>
+            <textarea
+              style={{ ...fieldStyle, resize: 'vertical', minHeight: 60 }}
+              value={observacoes}
+              onChange={(e) => setObservacoes(e.target.value)}
+              placeholder="Notas adicionais..."
+            />
+            <MicButton onResult={(t) => setObservacoes((v) => v ? v + ' ' + t : t)} />
+          </div>
         </div>
 
         {/* Ações */}
         <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', paddingTop: 4 }}>
           <button
+            type="button"
             onClick={onClose}
+            disabled={saving}
             style={{
               padding: '9px 20px', borderRadius: 8, border: `1px solid ${TOKENS.line}`,
               background: '#fff', color: TOKENS.ink2, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600, fontSize: 13,
@@ -250,17 +340,18 @@ export default function GastoModal({ open, onClose, onSave, inicial }: Props) {
             Cancelar
           </button>
           <button
+            type="button"
             onClick={handleSave}
-            disabled={!descricao.trim() || !fornecedor.trim()}
+            disabled={!podesSalvar}
             style={{
               padding: '9px 20px', borderRadius: 8, border: 'none',
-              background: !descricao.trim() || !fornecedor.trim() ? TOKENS.line : TOKENS.primary,
-              color: !descricao.trim() || !fornecedor.trim() ? TOKENS.muted : '#fff',
-              cursor: !descricao.trim() || !fornecedor.trim() ? 'not-allowed' : 'pointer',
+              background: podesSalvar ? TOKENS.primary : TOKENS.line,
+              color: podesSalvar ? '#fff' : TOKENS.muted,
+              cursor: podesSalvar ? 'pointer' : 'not-allowed',
               fontFamily: 'inherit', fontWeight: 700, fontSize: 13,
             }}
           >
-            {inicial ? 'Salvar alterações' : 'Cadastrar gasto'}
+            {saving ? 'Salvando…' : inicial ? 'Salvar alterações' : 'Cadastrar gasto'}
           </button>
         </div>
       </div>

@@ -41,6 +41,7 @@ export interface Parcela {
   vencimento: string; // YYYY-MM-DD
   pago: boolean;
   dataPagamento?: string;
+  comprovanteUrl?: string;  // URL do comprovante no Firebase Storage
 }
 
 export interface Gasto {
@@ -50,6 +51,7 @@ export interface Gasto {
   fornecedor: string;
   parcelas: Parcela[];
   observacoes?: string;
+  contratoUrl?: string;     // URL do contrato no Firebase Storage
   criadoEm: string;
 }
 
