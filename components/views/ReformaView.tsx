@@ -10,7 +10,7 @@ import ContribuicaoModal from '@/components/reforma/ContribuicaoModal';
 import GastoCard from '@/components/reforma/GastoCard';
 import SocioSaldo from '@/components/reforma/SocioSaldo';
 import KPI from '@/components/ui/KPI';
-import type { Gasto, Contribuicao } from '@/types/reforma';
+import type { Gasto, Contribuicao, ReformaData } from '@/types/reforma';
 import {
   totalPrevisto,
   totalPago,
@@ -31,8 +31,15 @@ function hoje() {
   return new Date().toISOString().split('T')[0];
 }
 
-export default function ReformaView() {
-  const { reforma, setReforma } = useReforma();
+interface Props {
+  reformaData?: ReformaData;
+  setReformaData?: (d: ReformaData) => void;
+}
+
+export default function ReformaView({ reformaData, setReformaData }: Props) {
+  const store = useReforma();
+  const reforma = reformaData ?? store.reforma;
+  const setReforma = setReformaData ?? store.setReforma;
   const [aba, setAba] = useState<Aba>('resumo');
   const [modalGasto, setModalGasto] = useState(false);
   const [gastoEditando, setGastoEditando] = useState<Gasto | null>(null);
