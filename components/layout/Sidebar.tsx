@@ -13,11 +13,12 @@ interface NavItem {
 }
 
 const NAV: NavItem[] = [
-  { id: 'dashboard',  label: 'Visão Geral', icon: '◉' },
-  { id: 'pacientes',  label: 'Pacientes',   icon: '♀' },
-  { id: 'financeiro', label: 'Financeiro',  icon: '₊' },
-  { id: 'agenda',     label: 'Agenda',      icon: '◷' },
-  { id: 'alertas',    label: 'Alertas',     icon: '◈' },
+  { id: 'dashboard',   label: 'Visão Geral',   icon: '◉' },
+  { id: 'pacientes',   label: 'Pacientes',      icon: '♀' },
+  { id: 'atendimento', label: 'Atendimentos',   icon: '☎' },
+  { id: 'financeiro',  label: 'Financeiro',     icon: '₊' },
+  { id: 'agenda',      label: 'Agenda',         icon: '◷' },
+  { id: 'alertas',     label: 'Alertas',        icon: '◈' },
 ];
 
 interface SidebarProps {
@@ -28,9 +29,10 @@ interface SidebarProps {
   user: User | null;
   syncStatus: 'connecting' | 'live' | 'offline';
   onSignOut: () => void;
+  leadsOverdueCount?: number;
 }
 
-export default function Sidebar({ view, onNav, data, setData, user, syncStatus, onSignOut }: SidebarProps) {
+export default function Sidebar({ view, onNav, data, setData, user, syncStatus, onSignOut, leadsOverdueCount = 0 }: SidebarProps) {
   const importRef = useRef<HTMLInputElement>(null);
 
   const alertasCount = data.pacientes.filter((p) => alertasCobrancaDPP(p).length > 0).length;
@@ -190,6 +192,22 @@ export default function Sidebar({ view, onNav, data, setData, user, syncStatus, 
                 </span>
                 {item.label}
               </span>
+              {item.id === 'atendimento' && leadsOverdueCount > 0 && (
+                <span
+                  style={{
+                    background: active ? `rgba(31,58,95,0.2)` : TOKENS.amberSoft,
+                    color: active ? TOKENS.primary : TOKENS.amber,
+                    borderRadius: 20,
+                    fontSize: 10,
+                    fontWeight: 700,
+                    padding: '1px 7px',
+                    minWidth: 20,
+                    textAlign: 'center',
+                  }}
+                >
+                  {leadsOverdueCount}
+                </span>
+              )}
               {item.id === 'alertas' && alertasCount > 0 && (
                 <span
                   style={{
