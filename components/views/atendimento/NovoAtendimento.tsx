@@ -358,7 +358,7 @@ export default function NovoAtendimento({ leads, pacientes, onSave, onCancel, us
                 🎯 Transição para agendamento
               </div>
               <p style={{ margin: 0, fontSize: 13, color: '#1e3a8a', fontStyle: 'italic', lineHeight: 1.75 }}>
-                "Então, {form.nome || '[nome]'}, vou verificar os próximos horários disponíveis pra você. A agenda do Dr. Itamar está bem concorrida — qual dia da semana você prefere?"
+                &quot;Então, {form.nome || '[nome]'}, vou verificar os próximos horários disponíveis pra você. A agenda do Dr. Itamar está bem concorrida — qual dia da semana você prefere?&quot;
               </p>
             </div>
             <ObjecaoPanel

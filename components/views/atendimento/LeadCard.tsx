@@ -148,7 +148,7 @@ export default function LeadCard({ lead, onStatusChange, onDelete, onConvert }: 
 
         {lead.observacoes && (
           <div style={{ fontSize: 12, color: TOKENS.muted, marginTop: 4, fontStyle: 'italic' }}>
-            "{lead.observacoes}"
+            &quot;{lead.observacoes}&quot;
           </div>
         )}
       </div>
