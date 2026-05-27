@@ -24,7 +24,7 @@ export function useReformaPublic() {
     setReformaState(data);
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      saveReforma(data, 'publico').catch(() => setSyncStatus('offline'));
+      saveReforma(data).catch(() => setSyncStatus('offline'));
     }, 400);
   }, []);
 

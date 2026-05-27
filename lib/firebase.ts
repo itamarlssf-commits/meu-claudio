@@ -21,7 +21,8 @@ import {
 import type { AppData } from '@/types/paciente';
 import type { ReformaData } from '@/types/reforma';
 
-const firebaseConfig = {
+// Projeto Firebase das pacientes (acesso restrito por senha)
+const pacientesConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
@@ -30,13 +31,26 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+// Projeto Firebase da reforma (acesso público, compartilhado por link)
+const reformaConfig = {
+  apiKey: process.env.NEXT_PUBLIC_REFORMA_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_REFORMA_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_REFORMA_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_REFORMA_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_REFORMA_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_REFORMA_FIREBASE_APP_ID,
+};
 
-export const auth = getAuth(app);
-export const db = getFirestore(app);
-export const storage = getStorage(app);
+const pacientesApp = getApps().find((a) => a.name === 'pacientes') ?? initializeApp(pacientesConfig, 'pacientes');
+const reformaApp   = getApps().find((a) => a.name === 'reforma')   ?? initializeApp(reformaConfig,   'reforma');
+
+export const auth    = getAuth(pacientesApp);
+export const db      = getFirestore(pacientesApp);
 export const DOC_REF = doc(db, 'consultorio', 'principal');
-export const REFORMA_REF = doc(db, 'consultorio', 'reforma');
+
+const reformaDb      = getFirestore(reformaApp);
+const reformaStorage = getStorage(reformaApp);
+export const REFORMA_REF = doc(reformaDb, 'consultorio', 'reforma');
 
 export async function signIn(email: string, senha: string): Promise<User> {
   const cred = await signInWithEmailAndPassword(auth, email, senha);
@@ -76,24 +90,23 @@ export function subscribeReforma(cb: (data: ReformaData | null) => void): () => 
   });
 }
 
-export async function saveReforma(data: ReformaData, userEmail: string): Promise<void> {
+export async function saveReforma(data: ReformaData): Promise<void> {
   await setDoc(REFORMA_REF, {
     payload: data,
     updatedAt: serverTimestamp(),
-    updatedBy: userEmail,
   });
 }
 
 export async function uploadContrato(gastoId: string, file: File): Promise<string> {
   const path = `reforma/contratos/${gastoId}/${file.name}`;
-  const ref = storageRef(storage, path);
+  const ref = storageRef(reformaStorage, path);
   await uploadBytes(ref, file);
   return getDownloadURL(ref);
 }
 
 export async function uploadComprovante(gastoId: string, parcelaId: string, file: File): Promise<string> {
   const path = `reforma/comprovantes/${gastoId}/${parcelaId}/${file.name}`;
-  const ref = storageRef(storage, path);
+  const ref = storageRef(reformaStorage, path);
   await uploadBytes(ref, file);
   return getDownloadURL(ref);
 }

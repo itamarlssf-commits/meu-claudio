@@ -1,16 +1,8 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // Dados de pacientes — apenas usuários autenticados
-    match /consultorio/principal {
-      allow read, write: if request.auth != null;
-    }
-
-    // Controle de reforma — acesso público (compartilhado por link)
     match /consultorio/reforma {
       allow read, write: if true;
     }
-
   }
 }
