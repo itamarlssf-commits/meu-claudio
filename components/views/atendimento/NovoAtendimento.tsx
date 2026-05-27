@@ -6,7 +6,6 @@ import type { Paciente } from '@/types/paciente';
 import { MOTIVO_LABELS } from '@/types/lead';
 import { TOKENS } from '@/lib/tokens';
 import {
-  SCRIPTS,
   genLeadId,
   findDuplicatePhone,
   formatPhone,
@@ -14,6 +13,7 @@ import {
 import { todayISO } from '@/lib/business-logic';
 import ScriptBox from './ScriptBox';
 import ObjecaoPanel from './ObjecaoPanel';
+import DecisionTreeFlow from './DecisionTreeFlow';
 
 const ORIGENS: LeadOrigem[] = [
   'Instagram',
@@ -326,9 +326,10 @@ export default function NovoAtendimento({ leads, pacientes, onSave, onCancel, us
               ))}
             </div>
             {form.motivo && (
-              <ScriptBox
-                script={SCRIPTS[form.motivo as LeadMotivo]}
-                label="💬 Script para este motivo:"
+              <DecisionTreeFlow
+                key={form.motivo}
+                motivo={form.motivo as LeadMotivo}
+                nome={form.nome}
               />
             )}
           </div>
