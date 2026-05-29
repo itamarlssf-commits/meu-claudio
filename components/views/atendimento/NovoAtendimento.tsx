@@ -6,7 +6,6 @@ import type { Paciente } from '@/types/paciente';
 import { MOTIVO_LABELS } from '@/types/lead';
 import { TOKENS } from '@/lib/tokens';
 import {
-  SCRIPTS,
   genLeadId,
   findDuplicatePhone,
   formatPhone,
@@ -14,6 +13,7 @@ import {
 import { todayISO } from '@/lib/business-logic';
 import ScriptBox from './ScriptBox';
 import ObjecaoPanel from './ObjecaoPanel';
+import DecisionTreeFlow from './DecisionTreeFlow';
 
 const ORIGENS: LeadOrigem[] = [
   'Instagram',
@@ -28,6 +28,49 @@ const MOTIVOS = Object.entries(MOTIVO_LABELS) as [LeadMotivo, string][];
 
 const STEP_LABELS = ['📞 Contato', '🎯 Motivo', '💬 Atendimento', '✅ Resultado', '📋 Resumo'];
 
+const PHASE_CONFIG = [
+  {
+    fase: 'Abertura calorosa',
+    objetivo: 'Criar rapport, identificar a paciente e entender como chegou até nós',
+    dica: 'Sorria! Ao telefone, o sorriso aparece na voz. A paciente precisa sentir que chegou ao lugar certo.',
+    cor: '#166534',
+    bg: '#d1fae5',
+    border: '#10b98130',
+  },
+  {
+    fase: 'Escuta ativa',
+    objetivo: 'Entender o motivo da consulta e usar o roteiro certo para cada situação',
+    dica: 'Deixe ela falar primeiro. Valide o sentimento antes de apresentar. Cada palavra dela é uma pista do que ela precisa ouvir.',
+    cor: '#1e3a8a',
+    bg: '#dbeafe',
+    border: '#3b82f630',
+  },
+  {
+    fase: 'Apresentação e condução',
+    objetivo: 'Apresentar o Dr. Itamar, contornar objeções com empatia e conduzir ao agendamento',
+    dica: 'Objeção não é um "não" — é um pedido de mais informação. Valide, responda com leveza e redirecione. Você está do lado dela.',
+    cor: '#1f3a5f',
+    bg: '#1f3a5f12',
+    border: '#1f3a5f20',
+  },
+  {
+    fase: 'Fechamento',
+    objetivo: 'Registrar o resultado e confirmar o agendamento com todos os detalhes',
+    dica: 'Se agendou: celebre com ela! Se não agendou: mantenha a porta aberta com carinho. Sua energia agora determina a próxima ligação.',
+    cor: '#92400e',
+    bg: '#fef3c7',
+    border: '#f59e0b30',
+  },
+  {
+    fase: 'Confirmação e encerramento',
+    objetivo: 'Revisar o cadastro e enviar a confirmação via WhatsApp agora',
+    dica: 'Envie a mensagem de confirmação imediatamente — reforça o compromisso e reduz cancelamentos. Esse detalhe faz diferença real.',
+    cor: '#7a8494',
+    bg: '#f0f1f3',
+    border: '#e8eaed',
+  },
+];
+
 interface FormState {
   nome: string;
   telefone: string;
@@ -39,6 +82,8 @@ interface FormState {
   hora: string;
   dataRetorno: string;
   objetaoCodigo: string;
+  dataConsulta: string;
+  horaConsulta: string;
 }
 
 const emptyForm = (): FormState => ({
@@ -52,6 +97,8 @@ const emptyForm = (): FormState => ({
   hora: '',
   dataRetorno: '',
   objetaoCodigo: '',
+  dataConsulta: '',
+  horaConsulta: '',
 });
 
 interface Props {
@@ -97,6 +144,8 @@ export default function NovoAtendimento({ leads, pacientes, onSave, onCancel, us
       dataRetorno: form.status === 'retornar' && form.dataRetorno ? form.dataRetorno : undefined,
       objetaoCodigo: form.objetaoCodigo || undefined,
       criadoPor: userEmail,
+      dataConsulta: form.status === 'agendou' && form.dataConsulta ? form.dataConsulta : undefined,
+      horaConsulta: form.status === 'agendou' && form.horaConsulta ? form.horaConsulta : undefined,
     };
     onSave(lead);
   }
@@ -209,6 +258,37 @@ export default function NovoAtendimento({ leads, pacientes, onSave, onCancel, us
           />
         </div>
       </div>
+
+      {/* Phase header */}
+      {(() => {
+        const ph = PHASE_CONFIG[step];
+        return (
+          <div
+            style={{
+              background: ph.bg,
+              border: `1px solid ${ph.border}`,
+              borderRadius: 12,
+              padding: '12px 16px',
+              marginBottom: 14,
+              display: 'flex',
+              gap: 12,
+              alignItems: 'flex-start',
+            }}
+          >
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 10, fontWeight: 800, color: ph.cor, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 2 }}>
+                {STEP_LABELS[step]} · {ph.fase}
+              </div>
+              <div style={{ fontSize: 12, color: ph.cor, fontWeight: 500, marginBottom: 4 }}>
+                {ph.objetivo}
+              </div>
+              <div style={{ fontSize: 11, color: ph.cor, fontStyle: 'italic', opacity: 0.85 }}>
+                💡 {ph.dica}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Step content */}
       <div
@@ -326,9 +406,10 @@ export default function NovoAtendimento({ leads, pacientes, onSave, onCancel, us
               ))}
             </div>
             {form.motivo && (
-              <ScriptBox
-                script={SCRIPTS[form.motivo as LeadMotivo]}
-                label="💬 Script para este motivo:"
+              <DecisionTreeFlow
+                key={form.motivo}
+                motivo={form.motivo as LeadMotivo}
+                nome={form.nome}
               />
             )}
           </div>
@@ -415,6 +496,44 @@ export default function NovoAtendimento({ leads, pacientes, onSave, onCancel, us
                 ))}
               </div>
             </div>
+            {form.status === 'agendou' && (
+              <div
+                style={{
+                  background: TOKENS.greenSoft,
+                  border: `1px solid ${TOKENS.green}30`,
+                  borderRadius: 10,
+                  padding: '12px 14px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 10,
+                }}
+              >
+                <div style={{ fontSize: 10, fontWeight: 800, color: '#166534', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+                  📅 Data e hora da consulta
+                </div>
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ ...labelStyle, color: '#166534' }}>Data</label>
+                    <input
+                      type="date"
+                      value={form.dataConsulta}
+                      onChange={(e) => set('dataConsulta', e.target.value)}
+                      min={todayISO()}
+                      style={{ ...inputStyle, borderColor: form.dataConsulta ? TOKENS.green : TOKENS.line }}
+                    />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ ...labelStyle, color: '#166534' }}>Horário</label>
+                    <input
+                      type="time"
+                      value={form.horaConsulta}
+                      onChange={(e) => set('horaConsulta', e.target.value)}
+                      style={{ ...inputStyle, borderColor: form.horaConsulta ? TOKENS.green : TOKENS.line }}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
             {form.status === 'retornar' && (
               <div>
                 <label style={labelStyle}>Data para retornar *</label>
@@ -471,6 +590,7 @@ export default function NovoAtendimento({ leads, pacientes, onSave, onCancel, us
                 { label: 'Origem', value: form.origem },
                 { label: 'Motivo', value: form.motivo ? MOTIVO_LABELS[form.motivo as LeadMotivo] : '—' },
                 { label: 'Resultado', value: form.status },
+                { label: 'Consulta agendada', value: form.dataConsulta ? `${new Date(form.dataConsulta + 'T12:00:00').toLocaleDateString('pt-BR')}${form.horaConsulta ? ' às ' + form.horaConsulta : ''}` : '—' },
                 { label: 'Retornar em', value: form.dataRetorno ? new Date(form.dataRetorno + 'T12:00:00').toLocaleDateString('pt-BR') : '—' },
                 { label: 'Observações', value: form.observacoes || '—' },
               ].map((r, i, arr) => (
