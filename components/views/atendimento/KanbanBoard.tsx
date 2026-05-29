@@ -34,11 +34,17 @@ const COLS: ColDef[] = [
 
 function KanbanCard({
   lead,
+  isDragging,
+  onDragStart,
+  onDragEnd,
   onMove,
   onConvert,
   onDelete,
 }: {
   lead: Lead;
+  isDragging: boolean;
+  onDragStart: () => void;
+  onDragEnd: () => void;
   onMove: (status: LeadStatus) => void;
   onConvert: () => void;
   onDelete: () => void;
@@ -59,15 +65,26 @@ function KanbanCard({
 
   return (
     <div
+      draggable
+      onDragStart={(e) => {
+        e.dataTransfer.setData('text/plain', lead.id);
+        e.dataTransfer.effectAllowed = 'move';
+        onDragStart();
+      }}
+      onDragEnd={onDragEnd}
       style={{
         background: '#fff',
         borderRadius: 10,
         padding: '11px 12px',
         border: `1px solid ${TOKENS.line}`,
-        boxShadow: TOKENS.shadowSm,
+        boxShadow: isDragging ? TOKENS.shadowMd : TOKENS.shadowSm,
         display: 'flex',
         flexDirection: 'column',
         gap: 6,
+        opacity: isDragging ? 0.4 : 1,
+        cursor: isDragging ? 'grabbing' : 'grab',
+        transition: 'opacity 0.15s ease, box-shadow 0.15s ease',
+        userSelect: 'none',
       }}
     >
       {/* Name + aging */}
@@ -317,8 +334,36 @@ function KanbanCard({
 }
 
 export default function KanbanBoard({ leads, onSaveLead, onRemoveLead, onConvert }: Props) {
+  const [draggedId, setDraggedId] = useState<string | null>(null);
+  const [dragOverStatus, setDragOverStatus] = useState<LeadStatus | null>(null);
+
+  const draggedLead = draggedId ? leads.find((l) => l.id === draggedId) : null;
+
   function moveStatus(lead: Lead, status: LeadStatus) {
     onSaveLead({ ...lead, status });
+  }
+
+  function handleDragOver(e: React.DragEvent, colStatus: LeadStatus) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (dragOverStatus !== colStatus) setDragOverStatus(colStatus);
+  }
+
+  function handleDragLeave(e: React.DragEvent) {
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setDragOverStatus(null);
+    }
+  }
+
+  function handleDrop(e: React.DragEvent, colStatus: LeadStatus) {
+    e.preventDefault();
+    const id = e.dataTransfer.getData('text/plain');
+    const lead = leads.find((l) => l.id === id);
+    if (lead && lead.status !== colStatus) {
+      moveStatus(lead, colStatus);
+    }
+    setDragOverStatus(null);
+    setDraggedId(null);
   }
 
   return (
@@ -334,12 +379,28 @@ export default function KanbanBoard({ leads, onSaveLead, onRemoveLead, onConvert
     >
       {COLS.map((col) => {
         const colLeads = leads.filter((l) => l.status === col.status);
+        const isOver = dragOverStatus === col.status && draggedLead?.status !== col.status;
+
         return (
-          <div key={col.status}>
+          <div
+            key={col.status}
+            onDragOver={(e) => handleDragOver(e, col.status)}
+            onDragLeave={handleDragLeave}
+            onDrop={(e) => handleDrop(e, col.status)}
+            style={{
+              borderRadius: 12,
+              border: isOver
+                ? `2px dashed ${col.bar}`
+                : '2px solid transparent',
+              background: isOver ? `${col.bar}10` : 'transparent',
+              padding: isOver ? 6 : 0,
+              transition: 'border 0.15s ease, background 0.15s ease, padding 0.15s ease',
+            }}
+          >
             {/* Column header */}
             <div
               style={{
-                background: col.bg,
+                background: isOver ? col.bg : col.bg,
                 border: `1px solid ${col.bar}40`,
                 borderRadius: 10,
                 padding: '9px 12px',
@@ -347,6 +408,8 @@ export default function KanbanBoard({ leads, onSaveLead, onRemoveLead, onConvert
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
+                boxShadow: isOver ? `0 0 0 2px ${col.bar}40` : 'none',
+                transition: 'box-shadow 0.15s ease',
               }}
             >
               <span style={{ fontWeight: 800, fontSize: 12, color: col.color }}>
@@ -369,30 +432,53 @@ export default function KanbanBoard({ leads, onSaveLead, onRemoveLead, onConvert
             </div>
 
             {/* Cards */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minHeight: 60 }}>
               {colLeads.length === 0 ? (
                 <div
                   style={{
                     textAlign: 'center',
                     padding: '24px 12px',
                     fontSize: 12,
-                    color: TOKENS.muted,
-                    border: `1.5px dashed ${TOKENS.line}`,
+                    color: isOver ? col.color : TOKENS.muted,
+                    border: `1.5px dashed ${isOver ? col.bar : TOKENS.line}`,
                     borderRadius: 10,
+                    fontWeight: isOver ? 700 : 400,
+                    transition: 'all 0.15s ease',
                   }}
                 >
-                  Nenhum lead
+                  {isOver ? '↓ Soltar aqui' : 'Nenhum lead'}
                 </div>
               ) : (
-                colLeads.map((lead) => (
-                  <KanbanCard
-                    key={lead.id}
-                    lead={lead}
-                    onMove={(status) => moveStatus(lead, status)}
-                    onConvert={() => onConvert(lead)}
-                    onDelete={() => onRemoveLead(lead.id)}
-                  />
-                ))
+                <>
+                  {colLeads.map((lead) => (
+                    <KanbanCard
+                      key={lead.id}
+                      lead={lead}
+                      isDragging={draggedId === lead.id}
+                      onDragStart={() => setDraggedId(lead.id)}
+                      onDragEnd={() => { setDraggedId(null); setDragOverStatus(null); }}
+                      onMove={(status) => moveStatus(lead, status)}
+                      onConvert={() => onConvert(lead)}
+                      onDelete={() => onRemoveLead(lead.id)}
+                    />
+                  ))}
+                  {isOver && (
+                    <div
+                      style={{
+                        textAlign: 'center',
+                        padding: '12px',
+                        fontSize: 12,
+                        color: col.color,
+                        border: `1.5px dashed ${col.bar}`,
+                        borderRadius: 10,
+                        fontWeight: 700,
+                        background: `${col.bar}08`,
+                      }}
+                    >
+                      ↓ Soltar aqui
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
