@@ -67,4 +67,6 @@ export interface Lead {
   objetaoCodigo?: string;
   criadoPor: string;
   contatos?: ContatoTentativa[];
+  dataConsulta?: string;
+  horaConsulta?: string;
 }

@@ -46,6 +46,19 @@ function genContatoId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
 }
 
+function gcalLink(lead: Lead): string {
+  const date = lead.dataConsulta!.replace(/-/g, '');
+  const time = lead.horaConsulta ? lead.horaConsulta.replace(':', '') + '00' : '080000';
+  const [h, m] = lead.horaConsulta ? lead.horaConsulta.split(':').map(Number) : [8, 0];
+  const endH = String(h + 1).padStart(2, '0');
+  const endTime = `${endH}${String(m).padStart(2, '0')}00`;
+  const start = `${date}T${time}`;
+  const end = `${date}T${endTime}`;
+  const title = encodeURIComponent(`Consulta Dr. Itamar – ${lead.nome}`);
+  const details = encodeURIComponent(`Motivo: ${lead.motivoLabel}\nTelefone: ${lead.telefone}`);
+  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${end}&details=${details}`;
+}
+
 function AgingBadge({ days }: { days: number }) {
   const color = days < 2 ? TOKENS.green : days < 5 ? TOKENS.amber : TOKENS.red;
   const bg = days < 2 ? TOKENS.greenSoft : days < 5 ? TOKENS.amberSoft : TOKENS.redSoft;
@@ -260,6 +273,12 @@ export default function LeadCard({ lead, onStatusChange, onDelete, onConvert, on
           {lead.dataRetorno && lead.status === 'retornar' && (
             <span style={{ color: overdue ? TOKENS.red : TOKENS.muted }}>
               📅 Retornar em {new Date(lead.dataRetorno + 'T12:00:00').toLocaleDateString('pt-BR')}
+            </span>
+          )}
+          {lead.dataConsulta && lead.status === 'agendou' && (
+            <span style={{ color: '#166534', fontWeight: 600 }}>
+              📅 Consulta: {new Date(lead.dataConsulta + 'T12:00:00').toLocaleDateString('pt-BR')}
+              {lead.horaConsulta && ` às ${lead.horaConsulta}`}
             </span>
           )}
         </div>
@@ -485,6 +504,33 @@ export default function LeadCard({ lead, onStatusChange, onDelete, onConvert, on
           >
             📞
           </button>
+        )}
+
+        {/* Google Calendar link */}
+        {lead.status === 'agendou' && lead.dataConsulta && (
+          <a
+            href={gcalLink(lead)}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              background: '#fff7ed',
+              color: '#c2410c',
+              border: '1px solid #fed7aa',
+              borderRadius: 7,
+              padding: '5px 10px',
+              fontSize: 11,
+              fontWeight: 700,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+              textDecoration: 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 4,
+            }}
+            title="Adicionar ao Google Calendar"
+          >
+            📅 GCal
+          </a>
         )}
 
         {/* Convert to patient */}
