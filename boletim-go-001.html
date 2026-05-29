@@ -63,7 +63,46 @@
       body { background: white; }
       .page { margin: 0; box-shadow: none; width: 100%; }
       .page-break { page-break-before: always; }
-      a { color: inherit !important; text-decoration: none !important; }
+
+      /* Botões de link: exibe URL como texto visível */
+      .card-links {
+        flex-direction: column !important;
+        gap: 3px !important;
+        margin-top: 8px !important;
+        padding-top: 8px !important;
+        border-top: 1px dashed #DEE2E6 !important;
+      }
+      .link-btn {
+        display: block !important;
+        border: none !important;
+        padding: 0 !important;
+        border-radius: 0 !important;
+        font-size: 8pt !important;
+        font-weight: 600 !important;
+        text-decoration: none !important;
+        color: #1B4F72 !important;
+      }
+      .link-btn::after {
+        content: attr(href);
+        display: block;
+        font-size: 6.5pt;
+        font-weight: 400;
+        color: #555;
+        word-break: break-all;
+        line-height: 1.4;
+        margin-top: 1px;
+      }
+
+      /* Link dentro de news-box */
+      .news-box-text a {
+        color: rgba(174,214,241,0.9) !important;
+      }
+      .news-box-text a::after {
+        content: " [" attr(href) "]";
+        font-size: 6.5pt;
+        word-break: break-all;
+        font-weight: 400;
+      }
     }
 
     /* ══════════════════════════════
