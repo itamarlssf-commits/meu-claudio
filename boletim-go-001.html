@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GO Insights — Boletim Científico | Edição 001 | Maio 2026</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --blue-dark:    #1B4F72;
+      --blue-med:     #2471A3;
+      --blue-light:   #AED6F1;
+      --blue-pale:    #EBF5FB;
+      --teal-dark:    #0E6655;
+      --teal-med:     #148F77;
+      --teal-light:   #A2D9CE;
+      --teal-pale:    #E8F8F5;
+      --purple-dark:  #6C3483;
+      --purple-med:   #8E44AD;
+      --purple-light: #D2B4DE;
+      --purple-pale:  #F5EEF8;
+      --red-dark:     #922B21;
+      --red-med:      #CB4335;
+      --red-light:    #F1948A;
+      --red-pale:     #FDEDEC;
+      --gray-50:      #F8F9FA;
+      --gray-100:     #F1F3F5;
+      --gray-200:     #E9ECEF;
+      --gray-300:     #DEE2E6;
+      --gray-500:     #ADB5BD;
+      --gray-600:     #6C757D;
+      --gray-700:     #495057;
+      --gray-800:     #343A40;
+      --gray-900:     #212529;
+      --white:        #FFFFFF;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #E8EAED;
+      font-size: 10pt;
+      color: var(--gray-900);
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    /* ── PAGE ── */
+    .page {
+      width: 210mm;
+      background: white;
+      margin: 12mm auto;
+      box-shadow: 0 4px 32px rgba(0,0,0,0.14);
+      overflow: hidden;
+    }
+
+    @page { size: A4; margin: 0; }
+
+    @media print {
+      body { background: white; }
+      .page { margin: 0; box-shadow: none; width: 100%; }
+      .page-break { page-break-before: always; }
+      a { color: inherit !important; text-decoration: none !important; }
+    }
+
+    /* ══════════════════════════════
+       COVER
+    ══════════════════════════════ */
+    .cover {
+      min-height: 297mm;
+      background: linear-gradient(155deg, #0a1e30 0%, #1B4F72 45%, #1a6fa0 100%);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cover::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 70% 50% at 85% 20%, rgba(70,160,220,0.12) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 60% at 10% 70%, rgba(46,113,177,0.10) 0%, transparent 55%);
+      pointer-events: none;
+    }
+
+    /* grid dots */
+    .cover::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(circle, rgba(255,255,255,0.045) 1px, transparent 1px);
+      background-size: 22px 22px;
+      pointer-events: none;
+    }
+
+    .cover-topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 36px;
+      background: rgba(0,0,0,0.25);
+      border-bottom: 1px solid rgba(255,255,255,0.09);
+      position: relative;
+      z-index: 1;
+    }
+    .cover-topbar-brand {
+      font-size: 9pt;
+      font-weight: 800;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.85);
+    }
+    .cover-topbar-date {
+      font-size: 8pt;
+      color: rgba(255,255,255,0.5);
+      letter-spacing: 1px;
+    }
+
+    .cover-body {
+      flex: 1;
+      padding: 52px 40px 36px;
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .cover-edition-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 30px;
+      padding: 5px 16px;
+      width: fit-content;
+      margin-bottom: 28px;
+    }
+    .cover-edition-pill span {
+      font-size: 7.5pt;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.8);
+    }
+    .cover-edition-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #5DADE2;
+    }
+
+    .cover-title {
+      font-size: 68pt;
+      font-weight: 900;
+      color: white;
+      line-height: 0.88;
+      letter-spacing: -3px;
+      margin-bottom: 4px;
+    }
+    .cover-title-sub {
+      font-size: 15pt;
+      font-weight: 300;
+      letter-spacing: 6px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.65);
+      margin-bottom: 36px;
+    }
+    .cover-rule {
+      width: 52px; height: 3px;
+      background: #5DADE2;
+      border-radius: 2px;
+      margin-bottom: 32px;
+    }
+
+    .cover-highlights {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 9px;
+      margin-bottom: 40px;
+    }
+
+    .cover-hl-item {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 9px;
+      padding: 11px 13px;
+    }
+
+    .cover-hl-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      margin-top: 4px;
+      flex-shrink: 0;
+    }
+    .cover-hl-text {
+      font-size: 8pt;
+      color: rgba(255,255,255,0.82);
+      line-height: 1.45;
+    }
+    .cover-hl-text strong {
+      display: block;
+      font-weight: 700;
+      font-size: 8.5pt;
+      color: white;
+      margin-bottom: 1px;
+    }
+
+    .cover-sources-block {
+      border-top: 1px solid rgba(255,255,255,0.09);
+      padding-top: 16px;
+    }
+    .cover-sources-label {
+      font-size: 7pt;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.35);
+      margin-bottom: 6px;
+    }
+    .cover-sources-text {
+      font-size: 7.5pt;
+      color: rgba(255,255,255,0.5);
+      line-height: 1.7;
+    }
+
+    .cover-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 40px;
+      background: rgba(0,0,0,0.30);
+      border-top: 1px solid rgba(255,255,255,0.07);
+      position: relative;
+      z-index: 1;
+    }
+    .cover-footer-curator {
+      font-size: 8.5pt;
+      font-weight: 600;
+      color: rgba(255,255,255,0.85);
+    }
+    .cover-footer-edition {
+      font-size: 8pt;
+      color: rgba(255,255,255,0.4);
+    }
+
+    /* ══════════════════════════════
+       HIGHLIGHTS BAND
+    ══════════════════════════════ */
+    .highlights-band {
+      background: linear-gradient(135deg, #1B4F72 0%, #2471A3 100%);
+      padding: 22px 32px;
+    }
+    .hb-label {
+      font-size: 7.5pt;
+      font-weight: 700;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.6);
+      margin-bottom: 14px;
+    }
+    .hb-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .hb-item {
+      background: rgba(255,255,255,0.10);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 8px;
+      padding: 10px 12px;
+      display: flex;
+      gap: 9px;
+      align-items: flex-start;
+    }
+    .hb-num {
+      font-size: 18pt;
+      font-weight: 900;
+      color: rgba(255,255,255,0.18);
+      line-height: 1;
+      flex-shrink: 0;
+      min-width: 24px;
+    }
+    .hb-text {
+      font-size: 7.5pt;
+      color: rgba(255,255,255,0.85);
+      line-height: 1.45;
+    }
+    .hb-text strong {
+      display: block;
+      font-weight: 700;
+      font-size: 8pt;
+      color: white;
+      margin-bottom: 2px;
+    }
+
+    /* ══════════════════════════════
+       SECTION HEADER
+    ══════════════════════════════ */
+    .sec-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px 32px;
+      position: relative;
+    }
+    .sec-badge {
+      width: 42px; height: 42px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.18);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .sec-badge svg { width: 22px; height: 22px; }
+    .sec-num {
+      font-size: 38pt;
+      font-weight: 900;
+      color: rgba(255,255,255,0.12);
+      position: absolute;
+      right: 28px;
+      top: 50%;
+      transform: translateY(-50%);
+      line-height: 1;
+    }
+    .sec-label {
+      font-size: 7pt;
+      font-weight: 700;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.6);
+      margin-bottom: 2px;
+    }
+    .sec-title {
+      font-size: 15pt;
+      font-weight: 800;
+      color: white;
+      line-height: 1.1;
+    }
+
+    .sec-obs  { background: var(--blue-dark); }
+    .sec-gyn  { background: var(--teal-dark); }
+    .sec-rep  { background: var(--purple-dark); }
+    .sec-onc  { background: var(--red-dark); }
+
+    /* ══════════════════════════════
+       SECTION CONTENT
+    ══════════════════════════════ */
+    .sec-body {
+      padding: 22px 28px 28px;
+    }
+
+    /* ══════════════════════════════
+       ARTICLE CARD
+    ══════════════════════════════ */
+    .card {
+      background: white;
+      border: 1px solid var(--gray-200);
+      border-left: 5px solid var(--blue-dark);
+      border-radius: 10px;
+      padding: 18px 20px;
+      margin-bottom: 16px;
+    }
+    .card-obs  { border-left-color: var(--blue-dark);   }
+    .card-gyn  { border-left-color: var(--teal-dark);   }
+    .card-rep  { border-left-color: var(--purple-dark); }
+    .card-onc  { border-left-color: var(--red-dark);    }
+
+    /* META ROW */
+    .card-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    .badge {
+      font-size: 7pt;
+      font-weight: 700;
+      letter-spacing: 0.7px;
+      text-transform: uppercase;
+      padding: 3px 9px;
+      border-radius: 20px;
+      display: inline-block;
+    }
+
+    /* Source badges */
+    .bs { background: var(--gray-800); color: white; }
+    .bs-blue   { background: var(--blue-dark); color: white; }
+    .bs-teal   { background: var(--teal-dark); color: white; }
+    .bs-purple { background: var(--purple-dark); color: white; }
+    .bs-red    { background: var(--red-dark); color: white; }
+    .bs-slate  { background: #2C3E50; color: white; }
+
+    /* Evidence badges */
+    .be-1a  { background: #D5F5E3; color: #1A7A3A; border: 1px solid #A9DFBF; }
+    .be-1b  { background: #D5F5E3; color: #239B56; border: 1px solid #A9DFBF; }
+    .be-2b  { background: #FDEBD0; color: #CA6F1E; border: 1px solid #FAD7A0; }
+    .be-dir { background: var(--blue-pale); color: var(--blue-dark); border: 1px solid var(--blue-light); }
+    .be-reg { background: var(--purple-pale); color: var(--purple-dark); border: 1px solid var(--purple-light); }
+    .be-ret { background: var(--gray-100); color: var(--gray-600); border: 1px solid var(--gray-300); }
+
+    /* Impact badge */
+    .be-high-obs { background: var(--blue-pale); color: var(--blue-dark); border: 1px solid var(--blue-light); }
+    .be-high-gyn { background: var(--teal-pale); color: var(--teal-dark); border: 1px solid var(--teal-light); }
+    .be-high-onc { background: var(--red-pale);  color: var(--red-dark);  border: 1px solid var(--red-light); }
+    .be-prot { background: #E8F4FD; color: #1A5276; border: 1px solid #AED6F1; }
+
+    /* TITLE */
+    .card-title {
+      font-size: 11.5pt;
+      font-weight: 800;
+      color: var(--gray-900);
+      line-height: 1.28;
+      margin-bottom: 10px;
+    }
+
+    /* INTRO TEXT */
+    .card-intro {
+      font-size: 9pt;
+      color: var(--gray-700);
+      line-height: 1.65;
+      margin-bottom: 12px;
+    }
+
+    /* KEY FINDINGS */
+    .kf-block {
+      background: var(--gray-50);
+      border-radius: 8px;
+      padding: 11px 13px;
+      margin-bottom: 11px;
+    }
+    .kf-label {
+      font-size: 7pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--gray-500);
+      margin-bottom: 8px;
+    }
+    .kf-list {
+      list-style: none;
+    }
+    .kf-list li {
+      font-size: 9pt;
+      color: var(--gray-800);
+      padding: 3px 0 3px 18px;
+      position: relative;
+      line-height: 1.55;
+    }
+    .kf-list li::before {
+      content: '▸';
+      position: absolute;
+      left: 0;
+      color: var(--gray-500);
+      font-size: 8pt;
+      top: 4px;
+    }
+    .kf-list li strong { color: var(--gray-900); }
+
+    /* IMPLICATION BOX */
+    .impl-box {
+      border-radius: 8px;
+      padding: 11px 14px;
+      margin-bottom: 13px;
+      border-left: 3px solid;
+    }
+    .impl-obs    { background: var(--blue-pale);   border-left-color: var(--blue-med);   }
+    .impl-gyn    { background: var(--teal-pale);   border-left-color: var(--teal-med);   }
+    .impl-rep    { background: var(--purple-pale); border-left-color: var(--purple-med); }
+    .impl-onc    { background: var(--red-pale);    border-left-color: var(--red-med);    }
+    .impl-neutral{ background: var(--gray-50);     border-left-color: var(--gray-500);   }
+
+    .impl-label {
+      font-size: 7pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 4px;
+    }
+    .impl-label.obs    { color: var(--blue-dark);   }
+    .impl-label.gyn    { color: var(--teal-dark);   }
+    .impl-label.rep    { color: var(--purple-dark); }
+    .impl-label.onc    { color: var(--red-dark);    }
+    .impl-label.neutral{ color: var(--gray-600);    }
+
+    .impl-text {
+      font-size: 9pt;
+      line-height: 1.58;
+      color: var(--gray-800);
+    }
+
+    /* LINK BUTTON */
+    .card-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 2px;
+    }
+    .link-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 8pt;
+      font-weight: 600;
+      padding: 5px 12px;
+      border-radius: 5px;
+      border: 1.5px solid;
+      text-decoration: none;
+      letter-spacing: 0.2px;
+    }
+    .link-obs    { color: var(--blue-dark);   border-color: var(--blue-dark);   }
+    .link-gyn    { color: var(--teal-dark);   border-color: var(--teal-dark);   }
+    .link-rep    { color: var(--purple-dark); border-color: var(--purple-dark); }
+    .link-onc    { color: var(--red-dark);    border-color: var(--red-dark);    }
+    .link-neutral{ color: var(--gray-700);    border-color: var(--gray-500);    }
+
+    /* ══════════════════════════════
+       TABLE
+    ══════════════════════════════ */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 8.5pt;
+      margin: 10px 0 14px;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--gray-200);
+    }
+    .data-table thead tr { background: var(--gray-800); }
+    .data-table th {
+      padding: 8px 11px;
+      text-align: left;
+      font-size: 7.5pt;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.9);
+    }
+    .data-table td {
+      padding: 8px 11px;
+      border-bottom: 1px solid var(--gray-200);
+      color: var(--gray-800);
+      vertical-align: middle;
+    }
+    .data-table tr:last-child td { border-bottom: none; }
+    .data-table tr:nth-child(even) td { background: var(--gray-50); }
+    .resp-rate { font-weight: 800; color: #1A7A3A; font-size: 10pt; }
+
+    /* ══════════════════════════════
+       PREVIEW GRID (ASCO)
+    ══════════════════════════════ */
+    .preview-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 10px 0 14px;
+    }
+    .preview-card {
+      background: var(--gray-50);
+      border-radius: 7px;
+      padding: 10px 12px;
+      border-top: 3px solid var(--red-med);
+    }
+    .preview-type {
+      font-size: 7pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--red-dark);
+      margin-bottom: 4px;
+    }
+    .preview-text {
+      font-size: 8.5pt;
+      color: var(--gray-800);
+      line-height: 1.45;
+    }
+
+    /* ══════════════════════════════
+       SPECIAL BOXES
+    ══════════════════════════════ */
+    .news-box {
+      background: linear-gradient(135deg, #17202A 0%, #2E4053 100%);
+      border-radius: 10px;
+      padding: 15px 18px;
+      margin-bottom: 14px;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      color: white;
+    }
+    .news-box-icon { font-size: 20pt; flex-shrink: 0; line-height: 1; }
+    .news-box-title { font-size: 9.5pt; font-weight: 700; margin-bottom: 3px; }
+    .news-box-text {
+      font-size: 8.5pt;
+      color: rgba(255,255,255,0.8);
+      line-height: 1.5;
+    }
+    .news-box-text a { color: rgba(174,214,241,0.9); }
+
+    /* ══════════════════════════════
+       DIVIDER
+    ══════════════════════════════ */
+    .divider {
+      height: 1px;
+      background: var(--gray-200);
+      margin: 6px 28px 22px;
+    }
+
+    /* ══════════════════════════════
+       FOOTER
+    ══════════════════════════════ */
+    .page-footer {
+      background: var(--gray-800);
+      color: rgba(255,255,255,0.65);
+      padding: 13px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 7.5pt;
+    }
+    .page-footer strong { color: rgba(255,255,255,0.9); }
+
+    .page-disclaimer {
+      background: #141414;
+      text-align: center;
+      padding: 8px 32px;
+      font-size: 6.5pt;
+      color: rgba(255,255,255,0.3);
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+     PÁGINA 1 — CAPA
+══════════════════════════════════════════ -->
+<div class="page">
+  <div class="cover">
+
+    <div class="cover-topbar">
+      <div class="cover-topbar-brand">Boletim Científico</div>
+      <div class="cover-topbar-date">Semana 22–28 de Maio de 2026</div>
+    </div>
+
+    <div class="cover-body">
+      <div>
+        <div class="cover-edition-pill">
+          <div class="cover-edition-dot"></div>
+          <span>Edição 001 &nbsp;·&nbsp; Educação Médica Continuada</span>
+        </div>
+
+        <div class="cover-title">GO<br>Insights</div>
+        <div class="cover-title-sub">Ginecologia &amp; Obstetrícia</div>
+        <div class="cover-rule"></div>
+
+        <div class="cover-highlights">
+          <div class="cover-hl-item">
+            <div class="cover-hl-dot" style="background:#5DADE2"></div>
+            <div class="cover-hl-text">
+              <strong>Obstetrícia</strong>
+              Implementação real do rastreio PlGF+aspirina reduz pré-eclâmpsia prematura em ~45% (UOG 2026)
+            </div>
+          </div>
+          <div class="cover-hl-item">
+            <div class="cover-hl-dot" style="background:#5DADE2"></div>
+            <div class="cover-hl-text">
+              <strong>Obstetrícia — Gemelares MC</strong>
+              RCOG recomenda SOLOMON, NIPT e documentação eletrônica de corionicidade
+            </div>
+          </div>
+          <div class="cover-hl-item">
+            <div class="cover-hl-dot" style="background:#5DADE2"></div>
+            <div class="cover-hl-text">
+              <strong>ISUOG — POCUS</strong>
+              Primeira diretriz global de ultrassom beira-leito em obstetrícia e ginecologia
+            </div>
+          </div>
+          <div class="cover-hl-item">
+            <div class="cover-hl-dot" style="background:#52BE80"></div>
+            <div class="cover-hl-text">
+              <strong>Rastreio Colo — ACOG</strong>
+              Autocoleta de HPV aprovada para mulheres 30–65 anos (Abril 2026)
+            </div>
+          </div>
+          <div class="cover-hl-item">
+            <div class="cover-hl-dot" style="background:#52BE80"></div>
+            <div class="cover-hl-text">
+              <strong>Anticoncepção — FDA</strong>
+              Nexplanon aprovado para uso estendido até 5 anos; Pearl Index = 0,0
+            </div>
+          </div>
+          <div class="cover-hl-item">
+            <div class="cover-hl-dot" style="background:#52BE80"></div>
+            <div class="cover-hl-text">
+              <strong>Menopausa — FDA</strong>
+              Caixa preta da terapia hormonal removida: reavaliação histórica dos riscos (Fev/2026)
+            </div>
+          </div>
+        </div>
+
+        <div class="cover-sources-block">
+          <div class="cover-sources-label">Fontes Consultadas</div>
+          <div class="cover-sources-text">
+            ACOG · RCOG · ISUOG · FIGO · SMFM · NEJM · AJOG · BJOG · UOG · Human Reproduction
+            <br>Fertility &amp; Sterility · Gynecologic Oncology · AJOG MFM · OpenEvidence · FDA.gov · SGO · ASCO
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cover-footer">
+      <div class="cover-footer-curator">Dr. Itamar Lssf — Ginecologista e Obstetra</div>
+      <div class="cover-footer-edition">Edição 001 de 2026</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     PÁGINA 2 — DESTAQUES + SEÇÃO 1 OBSTETRÍCIA
+══════════════════════════════════════════ -->
+<div class="page page-break">
+
+  <!-- HIGHLIGHTS BAND -->
+  <div class="highlights-band">
+    <div class="hb-label">Os Seis Destaques desta Edição</div>
+    <div class="hb-grid">
+      <div class="hb-item">
+        <div class="hb-num">01</div>
+        <div class="hb-text"><strong>Pré-eclâmpsia · UOG 2026</strong>PlGF no 1º trimestre + aspirina: PE pré-termo caiu de 1,1% → 0,6% na implementação real</div>
+      </div>
+      <div class="hb-item">
+        <div class="hb-num">02</div>
+        <div class="hb-text"><strong>Gemelares MC · RCOG 2026</strong>SOLOMON para TTTS, NIPT, documentação eletrônica de corionicidade agora recomendados</div>
+      </div>
+      <div class="hb-item">
+        <div class="hb-num">03</div>
+        <div class="hb-text"><strong>POCUS · ISUOG 2026</strong>1ª diretriz global padroniza uso beira-leito; US obrigatório antes do parto instrumentado</div>
+      </div>
+      <div class="hb-item">
+        <div class="hb-num">04</div>
+        <div class="hb-text"><strong>Colo do Útero · ACOG Abr/2026</strong>Autocoleta de HPV primário aprovada — amplia acesso ao rastreio, substitui diretriz de 2021</div>
+      </div>
+      <div class="hb-item">
+        <div class="hb-num">05</div>
+        <div class="hb-text"><strong>Nexplanon · FDA Jan/2026</strong>Duração estendida 3→5 anos. Pearl Index = 0,0 nos anos 4–5. Revisar implantes em uso</div>
+      </div>
+      <div class="hb-item">
+        <div class="hb-num">06</div>
+        <div class="hb-text"><strong>TH Menopausa · FDA Fev/2026</strong>Boxed warning removido de 6 produtos. TH segura na janela de oportunidade ≤10 anos</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SECTION 1: OBSTETRÍCIA ── -->
+  <div class="sec-header sec-obs">
+    <div class="sec-badge">
+      <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="7.5" r="3" fill="white"/><path d="M7 19c0-3 2.3-5 5-5s5 2 5 5H7z" fill="white"/><ellipse cx="12" cy="19.5" rx="4.5" ry="2.5" fill="rgba(255,255,255,0.25)"/></svg>
+    </div>
+    <div>
+      <div class="sec-label">Seção 01</div>
+      <div class="sec-title">Obstetrícia · Rotinas · USG · Parto</div>
+    </div>
+    <div class="sec-num">01</div>
+  </div>
+
+  <div class="sec-body">
+
+    <!-- ─── CARD 1.1 ─── -->
+    <div class="card card-obs">
+      <div class="card-meta">
+        <span class="badge bs">UOG · 2026</span>
+        <span class="badge bs-blue">AJOG · 2026</span>
+        <span class="badge be-2b">Evidência 2B</span>
+        <span class="badge be-high-obs">⚡ Impacto Alto</span>
+      </div>
+      <div class="card-title">Pré-eclâmpsia: Implementação Real do Rastreio com PlGF no 1º Trimestre + Aspirina</div>
+      <div class="card-intro">
+        Estudo de Badr et al. (UOG/2026) avaliou o impacto clínico e econômico de implementar protocolo baseado em <strong>PlGF no 1º trimestre</strong> com profilaxia com aspirina em centro terciário de medicina materno-fetal, comparando fase pré-implementação (ago/2011–jun/2014) com fase pós-implementação (jul/2017–fev/2024).
+      </div>
+      <div class="kf-block">
+        <div class="kf-label">Principais Achados</div>
+        <ul class="kf-list">
+          <li>Pré-eclâmpsia pré-termo: <strong>1,1% → 0,6%</strong> após implementação (~45% de redução real)</li>
+          <li>Redução concomitante do parto prematuro associado a doença hipertensiva</li>
+          <li>Implementação foi <strong>custo-efetiva</strong> para o sistema de saúde — dados suportam adoção nacional da estratégia "rastrear e prevenir"</li>
+          <li>Dado complementar (AJOG 2026): em gestantes de alto risco com <strong>razão sFlt-1/PlGF normal entre 24–28 semanas</strong>, a interrupção precoce da aspirina pode ser não-inferior à continuação até 36 semanas, com redução de eventos hemorrágicos menores e menor custo de monitoramento</li>
+          <li>Separadamente: meta-análise confirma que 150 mg/dia de aspirina a partir do 1º trimestre reduz PE pré-termo em até <strong>62%</strong> nas mulheres de alto risco identificadas pelo modelo FMF</li>
+        </ul>
+      </div>
+      <div class="impl-box impl-obs">
+        <div class="impl-label obs">Implicação Clínica</div>
+        <div class="impl-text">Implementar rastreio combinado de 1º trimestre com <strong>PlGF + pressão arterial média + índice de pulsatilidade das artérias uterinas</strong> como rotina em gestantes de risco. Para as que estão em uso de aspirina, considerar a razão sFlt-1/PlGF entre 24–28 semanas como critério objetivo para manter ou suspender o tratamento — personalizando a conduta com base em biomarcadores placentários, não empiricamente.</div>
+      </div>
+      <div class="card-links">
+        <a href="https://obgyn.onlinelibrary.wiley.com/doi/10.1002/uog.70176" class="link-btn link-obs" target="_blank">↗ UOG — Badr et al. 2026</a>
+        <a href="https://obgyn.onlinelibrary.wiley.com/doi/10.1002/uog.70212" class="link-btn link-obs" target="_blank">↗ UOG — HAS crônica (Rolnik 2026)</a>
+        <a href="https://www.ajog.org/article/S0002-9378(24)01209-2/fulltext" class="link-btn link-obs" target="_blank">↗ AJOG — sFlt-1/PlGF</a>
+      </div>
+    </div>
+
+    <!-- ─── CARD 1.2 ─── -->
+    <div class="card card-obs">
+      <div class="card-meta">
+        <span class="badge bs">RCOG Green-top · 2026</span>
+        <span class="badge be-dir">Diretriz</span>
+        <span class="badge be-prot">Atualização de Protocolo</span>
+      </div>
+      <div class="card-title">RCOG Green-top Atualizada: Gestação Gemelar Monocoriônica — 5 Mudanças Práticas</div>
+      <div class="card-intro">
+        O Royal College of Obstetricians and Gynaecologists atualizou parcialmente a Green-top Guideline sobre gestação gemelar monocoriônica (MC), publicada originalmente em 2016, com cinco modificações de impacto direto no protocolo clínico.
+      </div>
+      <div class="kf-block">
+        <div class="kf-label">O que Mudou</div>
+        <ul class="kf-list">
+          <li><strong>NIPT (cfDNA):</strong> pode ser ofertado em gemelares MC, condicionado ao resultado do combinado de 1º trimestre para trissomias 13, 18 e 21 — igual à conduta em gestações únicas</li>
+          <li><strong>Técnica SOLOMON:</strong> agora é o método recomendado para ablação fetal a laser na Síndrome de Transfusão Feto-Fetal (STFF), em substituição à ablação seletiva convencional</li>
+          <li><strong>Documentação eletrônica:</strong> imagem da inserção membranosa para corionicidade pode ser arquivada digitalmente — não é mais necessário papel térmico impresso obrigatoriamente</li>
+          <li><strong>Sexo fetal:</strong> pode ser utilizado como dado complementar para determinação de corionicidade quando a avaliação ocorre após 14 semanas de gestação</li>
+          <li><strong>Vigilância com US semanal</strong> recomendada se houver discrepância no volume de líquido amniótico entre as bolsas no 2º ou 3º trimestre</li>
+        </ul>
+      </div>
+      <div class="impl-box impl-obs">
+        <div class="impl-label obs">Implicação Clínica</div>
+        <div class="impl-text">Atualizar o protocolo institucional para gestação gemelar MC incluindo: SOLOMON como técnica padrão para referenciamento em casos de STFF, oferta de NIPT conforme resultado do combinado de 1º trimestre e adoção de documentação digital da corionicidade. Orientar equipe de ultrassonografia sobre a nova recomendação de US semanal em caso de discrepância de líquido.</div>
+      </div>
+      <div class="card-links">
+        <a href="https://obgyn.onlinelibrary.wiley.com/doi/10.1111/tog.70018" class="link-btn link-obs" target="_blank">↗ TOG/RCOG — Diretriz 2026</a>
+      </div>
+    </div>
+
+    <!-- ─── CARD 1.3 ─── -->
+    <div class="card card-obs">
+      <div class="card-meta">
+        <span class="badge bs">ISUOG · UOG 2026</span>
+        <span class="badge be-dir">Diretriz Grau 1</span>
+      </div>
+      <div class="card-title">ISUOG: Primeira Diretriz Global de POCUS em Obstetrícia e Ginecologia</div>
+      <div class="card-intro">
+        A ISUOG publicou em 2026 sua primeira diretriz dedicada ao <strong>ultrassom point-of-care (POCUS)</strong> em obstetrícia e ginecologia, padronizando o uso beira-leito em diferentes contextos e níveis de atenção — do ambulatório à sala de parto.
+      </div>
+      <div class="kf-block">
+        <div class="kf-label">Recomendações Chave</div>
+        <ul class="kf-list">
+          <li>Confirmação da <strong>apresentação fetal por ultrassom próximo ao parto</strong> é recomendada sempre que recursos disponíveis — reduz risco de breech não diagnosticado no trabalho de parto</li>
+          <li>Avaliação da <strong>posição da cabeça fetal por US antes do parto instrumentado</strong> (fórceps, vácuo) é mais precisa e confiável que o toque digital isolado — deve ser incorporada à rotina</li>
+          <li>POCUS padronizado para: localização placentária, biometria fetal, volume de líquido amniótico, Doppler umbilical e uterino, e suspeita de vasa prévia</li>
+          <li>Indicado no rastreio tardio (3º trimestre) de PIG e macrossomia quando exame morfológico de 2º trimestre não identificou alterações</li>
+        </ul>
+      </div>
+      <div class="impl-box impl-obs">
+        <div class="impl-label obs">Implicação Clínica</div>
+        <div class="impl-text">O POCUS passa a ser ferramenta clinicamente recomendada na rotina obstétrica — não apenas diagnóstica, mas também como suporte ao parto. A diretriz justifica e protocoliza seu uso em qualquer instituição que disponha de ultrassom portátil, tornando o uso beira-leito uma prática padrão, especialmente antes de condutas como parto instrumentado.</div>
+      </div>
+      <div class="card-links">
+        <a href="https://obgyn.onlinelibrary.wiley.com/doi/10.1002/uog.70122" class="link-btn link-obs" target="_blank">↗ ISUOG POCUS Guidelines (UOG)</a>
+        <a href="https://www.isuog.org/resource/isuog-practice-guidelines-point-of-care-ultrasound-in-obstetrics-and-gynecology.html" class="link-btn link-obs" target="_blank">↗ ISUOG.org</a>
+      </div>
+    </div>
+
+  </div><!-- /sec-body -->
+</div><!-- /page 2 -->
+
+
+<!-- ══════════════════════════════════════════
+     PÁGINA 3 — SEÇÃO 2: GINECOLOGIA / ROTINA / ANTICONCEPÇÃO
+══════════════════════════════════════════ -->
+<div class="page page-break">
+
+  <div class="sec-header sec-gyn">
+    <div class="sec-badge">
+      <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="7" r="3.5" fill="white"/><path d="M5 20c0-3.5 3-6 7-6s7 2.5 7 6H5z" fill="white"/></svg>
+    </div>
+    <div>
+      <div class="sec-label">Seção 02</div>
+      <div class="sec-title">Ginecologia · Rotina Clínica · Anticoncepção · Menopausa</div>
+    </div>
+    <div class="sec-num">02</div>
+  </div>
+
+  <div class="sec-body">
+
+    <!-- ─── CARD 2.1 ─── -->
+    <div class="card card-gyn">
+      <div class="card-meta">
+        <span class="badge bs-teal">ACOG · Abril 2026</span>
+        <span class="badge be-dir">Diretriz Grau 1</span>
+        <span class="badge be-high-gyn">⚡ Impacto Alto</span>
+      </div>
+      <div class="card-title">ACOG Committee Statement 28 (Abr/2026): Rastreio do Câncer do Colo — Autocoleta de HPV Aprovada</div>
+      <div class="card-intro">
+        Publicado em <strong>23 de abril de 2026</strong>, o Committee Statement 28 substitui integralmente a prática recomendada de 2021 e incorpora as atualizações da HRSA/Women's Preventive Services Initiative. A mudança mais relevante é a aprovação da <strong>autocoleta de amostra para HPV primário</strong> como opção válida de rastreio.
+      </div>
+      <div class="kf-block">
+        <div class="kf-label">Recomendações Atualizadas</div>
+        <ul class="kf-list">
+          <li><strong>Autocoleta de amostra</strong> para hrHPV (HPV primário) a cada 3 anos: opção válida para mulheres de <strong>30–65 anos com risco médio</strong>, quando esta for a preferência da paciente e houver infraestrutura clínica adequada para notificação, documentação e encaminhamento em caso de resultado positivo</li>
+          <li>Método preferido para 30–65 anos: <strong>HPV primário a cada 3 anos</strong> ou co-teste a cada 5 anos. O co-teste não é mais a recomendação preferencial — apenas uma das opções</li>
+          <li>Rastreio de rotina <strong>não recomendado</strong> após histerectomia total sem história de CIN 2/3 ou carcinoma invasivo — eliminar o rastreio desnecessário nessa população</li>
+          <li>Alinhamento com USPSTF, HRSA e ASCO — convergência das principais diretrizes facilitando implementação padronizada</li>
+        </ul>
+      </div>
+      <div class="impl-box impl-gyn">
+        <div class="impl-label gyn">Implicação Clínica</div>
+        <div class="impl-text">A autocoleta abre um caminho concreto para ampliar o alcance do rastreio em regiões com escassez de ginecologistas — contexto muito prevalente no Brasil. Para pacientes com dificuldade de acesso, baixa adesão às consultas preventivas ou que apresentem resistência ao exame, a autocoleta pode ser uma estratégia de alta eficiência. Atualizar o protocolo de rastreio do seu consultório e remover a recomendação de co-teste como método padrão para mulheres de risco médio.</div>
+      </div>
+      <div class="card-links">
+        <a href="https://www.acog.org/news/news-releases/2026/04/acog-publishes-updated-cervical-cancer-screening-guidance" class="link-btn link-gyn" target="_blank">↗ ACOG — Comunicado Oficial</a>
+        <a href="https://www.acog.org/clinical/clinical-guidance/committee-statement/articles/2026/07/screening-for-cervical-cancer" class="link-btn link-gyn" target="_blank">↗ ACOG Statement 28 (texto completo)</a>
+      </div>
+    </div>
+
+    <!-- ─── CARD 2.2 ─── -->
+    <div class="card card-gyn">
+      <div class="card-meta">
+        <span class="badge bs-teal">FDA · Janeiro 2026</span>
+        <span class="badge be-reg">Aprovação Regulatória</span>
+      </div>
+      <div class="card-title">FDA Aprova Nexplanon (Etonogestrel) para Uso Estendido: de 3 para até 5 Anos</div>
+      <div class="card-intro">
+        Em <strong>19 de janeiro de 2026</strong>, o FDA aprovou uma sNDA (supplemental New Drug Application) da Organon estendendo a duração de uso aprovada do implante subdérmico de etonogestrel de <strong>3 para até 5 anos</strong>, com base em dados de eficácia e segurança dos anos 4 e 5.
+      </div>
+      <div class="kf-block">
+        <div class="kf-label">Dados do Estudo de Extensão</div>
+        <ul class="kf-list">
+          <li>Amostra: <strong>399 mulheres</strong> em estudo multicêntrico prospectivo com seguimento até 5 anos</li>
+          <li>Gestações nos anos 4 e 5: <strong>zero (nenhuma)</strong></li>
+          <li>Pearl Index nos anos 4–5: <strong>0,0</strong> — eficácia anticoncepcional equivalente à dos primeiros 3 anos</li>
+          <li>IMC avaliado: <strong>17,2 a 64,3 kg/m²</strong> — amplitude que abrange a grande maioria das pacientes na prática clínica</li>
+          <li>Atualizado: <strong>novo programa REMS</strong> (Risk Evaluation and Mitigation Strategy) para treinamento padronizado de inserção e remoção pelos profissionais</li>
+        </ul>
+      </div>
+      <div class="impl-box impl-gyn">
+        <div class="impl-label gyn">Implicação Clínica — Ação Imediata</div>
+        <div class="impl-text">Revisar a <strong>data de validade dos implantes em uso</strong> nas pacientes do seu consultório. Mulheres com implante inserido entre 2021 e 2023 que chegam ao limite dos 3 anos podem ser orientadas sobre a nova aprovação para os anos 4 e 5, evitando procedimentos desnecessários de remoção e reinserção. Atualizar o aconselhamento pré-inserção para incluir a nova duração de até 5 anos como informação padrão.</div>
+      </div>
+      <div class="card-links">
+        <a href="https://www.contemporaryobgyn.net/view/fda-approves-5-year-use-for-etonogestrel-implant-68-mg-contraceptive" class="link-btn link-gyn" target="_blank">↗ Contemporary OB/GYN — FDA Nexplanon</a>
+      </div>
+    </div>
+
+    <!-- ─── CARD 2.3 ─── -->
+    <div class="card card-gyn">
+      <div class="card-meta">
+        <span class="badge bs-teal">FDA · Fevereiro 2026</span>
+        <span class="badge be-reg">Ação Regulatória</span>
+        <span class="badge be-high-gyn">⚡ Impacto Alto</span>
+      </div>
+      <div class="card-title">FDA Remove "Caixa Preta" da Terapia Hormonal: Revisão Histórica dos Riscos da TH na Menopausa</div>
+      <div class="card-intro">
+        Em <strong>12 de fevereiro de 2026</strong>, o FDA aprovou alterações de bula para <strong>6 produtos de terapia hormonal</strong> (incluindo Prometrium, Divigel e Bijuva), removendo do boxed warning (caixa preta) os alertas relacionados a doença cardiovascular, câncer de mama e demência provável — revisão baseada em análise abrangente da literatura científica iniciada em novembro de 2025.
+      </div>
+      <div class="kf-block">
+        <div class="kf-label">Estado Atual da Evidência (2026)</div>
+        <ul class="kf-list">
+          <li>TH continua sendo o tratamento de <strong>1ª linha</strong> para sintomas vasomotores moderados a intensos e síndrome geniturinária da menopausa (SGM)</li>
+          <li><strong>Estradiol transdérmico</strong> é o preferido quando há risco cardiometabólico ou trombótico — menor impacto hepático e sobre fatores de coagulação em comparação à via oral</li>
+          <li><strong>"Janela de oportunidade":</strong> os benefícios da TH são maiores quando iniciada em até 10 anos da menopausa ou antes dos 60 anos de idade — fora desta janela, o risco-benefício deve ser reavaliado individualmente</li>
+          <li><strong>Prevenção cardiovascular NÃO é indicação</strong> de TH — benefício cardiovascular está restrito ao período da janela de oportunidade</li>
+          <li>Nova revisão 2026 (PMC): potencial neuroprotetor da TH (Alzheimer) quando iniciada na janela — dados promissores, mas ainda insuficientes para uso como indicação isolada; argumento complementar válido para a consulta</li>
+        </ul>
+      </div>
+      <div class="impl-box impl-gyn">
+        <div class="impl-label gyn">Implicação Clínica</div>
+        <div class="impl-text">A remoção da caixa preta reduz significativamente a barreira psicológica — tanto de médicos quanto de pacientes — que historicamente impedia a prescrição adequada de TH. Revisitar o processo de consentimento e o roteiro de consulta do climatério: o contexto regulatório agora suporta uma conversa mais equilibrada sobre riscos e benefícios individualizados. Reforçar que a <strong>via, a dose e o momento de início</strong> são os determinantes principais de segurança.</div>
+      </div>
+      <div class="card-links">
+        <a href="https://www.contemporaryobgyn.net/view/fda-updates-labels-on-multiple-menopausal-hormone-therapies" class="link-btn link-gyn" target="_blank">↗ Contemporary OB/GYN — FDA TH</a>
+        <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC12652300/" class="link-btn link-gyn" target="_blank">↗ PMC — MHT Revisão 2026</a>
+        <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC12925088/" class="link-btn link-gyn" target="_blank">↗ PMC — TH e Alzheimer 2026</a>
+      </div>
+    </div>
+
+    <!-- ACOG + OpenEvidence -->
+    <div class="news-box">
+      <div class="news-box-icon">🤝</div>
+      <div>
+        <div class="news-box-title">ACOG + OpenEvidence — Parceria Estratégica (4 de Maio de 2026)</div>
+        <div class="news-box-text">A ACOG formalizou parceria com a OpenEvidence, tornando-se o primeiro parceiro de conteúdo em ob-gyn da plataforma. As diretrizes ACOG estão agora integradas à ferramenta de IA clínica mais usada por médicos nos EUA — suporte à decisão no ponto de cuidado. <a href="https://www.acog.org/news/news-releases/2026/05/acog-openevidence-announce-strategic-collaboration-to-advance-ob-gyn-health-care" target="_blank">Ver comunicado oficial ↗</a></div>
+      </div>
+    </div>
+
+  </div><!-- /sec-body -->
+</div><!-- /page 3 -->
+
+
+<!-- ══════════════════════════════════════════
+     PÁGINA 4 — SEÇÕES 3 E 4
+══════════════════════════════════════════ -->
+<div class="page page-break">
+
+  <!-- ── SECTION 3: REPRODUÇÃO HUMANA ── -->
+  <div class="sec-header sec-rep">
+    <div class="sec-badge">
+      <svg viewBox="0 0 24 24" fill="none"><circle cx="8.5" cy="8" r="3" fill="white"/><circle cx="15.5" cy="8" r="3" fill="rgba(255,255,255,0.55)"/><path d="M3 19c0-3 2.5-5 5.5-5h7c3 0 5.5 2 5.5 5H3z" fill="white"/></svg>
+    </div>
+    <div>
+      <div class="sec-label">Seção 03</div>
+      <div class="sec-title">Reprodução Humana · Fertilidade · FIV</div>
+    </div>
+    <div class="sec-num">03</div>
+  </div>
+
+  <div class="sec-body">
+
+    <!-- ─── CARD 3.1 ─── -->
+    <div class="card card-rep">
+      <div class="card-meta">
+        <span class="badge bs-purple">Fertility &amp; Sterility · Maio 2026</span>
+        <span class="badge be-ret">Coorte Retrospectiva</span>
+      </div>
+      <div class="card-title">F&S Maio 2026: PGT-A, Mosaicismo Embrionário e Novos Trials em Baixa Reserva Ovariana</div>
+      <div class="kf-block">
+        <div class="kf-label">Destaques da Edição</div>
+        <ul class="kf-list">
+          <li><strong>Mosaicismo embrionário + PGT-A:</strong> Estudo multicêntrico retrospectivo (dez/2019–ago/2022) avalia o impacto da <strong>abstinência ejaculatória</strong> sobre a taxa de mosaicismo embrionário em ciclos de FIV com PGT-A — dados preliminares relevantes para aconselhamento pré-ciclo sobre tempo de abstinência</li>
+          <li><strong>Ética do PGT-P:</strong> debate crescente sobre limites e responsabilidade no uso do teste genético poligênico pré-implantacional (PGT-P) para seleção embrionária — discussão com implicações regulatórias e éticas relevantes para a prática futura</li>
+          <li><strong>Novos trials em andamento 2026:</strong> via <strong>mTOR</strong> para melhora de qualidade embrionária; primer ovariano com microdoses de <strong>hCG + G-CSF</strong> pré-FIV em pacientes com baixa reserva ovariana (RCTs iniciados em 2026)</li>
+        </ul>
+      </div>
+      <div class="impl-box impl-rep">
+        <div class="impl-label rep">Implicação Clínica</div>
+        <div class="impl-text">Acompanhar os resultados dos trials de mTOR e primer ovariano — podem representar avanço significativo para o manejo da baixa reserva. O debate ético sobre PGT-P está chegando às consultas de fertilidade; importante estar informado sobre o estado atual do consenso científico para responder a perguntas das pacientes.</div>
+      </div>
+      <div class="card-links">
+        <a href="https://www.asrm.org/news-and-events/podcasts/fertility-and-sterility-on-air/fertility-and-sterility-on-air---toc-may-2026/" class="link-btn link-rep" target="_blank">↗ F&S On Air — ASRM Maio 2026</a>
+        <a href="https://centerforhumanreprod.com/reproductive-health-blog/new-2026-clinical-trials" class="link-btn link-rep" target="_blank">↗ Novos Trials 2026</a>
+      </div>
+    </div>
+
+  </div><!-- /sec-body rep -->
+
+  <div class="divider"></div>
+
+  <!-- ── SECTION 4: ONCOGINECOLOGIA ── -->
+  <div class="sec-header sec-onc">
+    <div class="sec-badge">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7l10 5 10-5-10-5z" fill="white"/><path d="M2 17l10 5 10-5" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round"/><path d="M2 12l10 5 10-5" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>
+    </div>
+    <div>
+      <div class="sec-label">Seção 04</div>
+      <div class="sec-title">Oncoginecologia</div>
+    </div>
+    <div class="sec-num">04</div>
+  </div>
+
+  <div class="sec-body">
+
+    <!-- ─── CARD 4.1 ─── -->
+    <div class="card card-onc">
+      <div class="card-meta">
+        <span class="badge bs-red">SGO 2026</span>
+        <span class="badge" style="background:#FADBD8;color:#7B241C;border:1px solid #F1948A;font-size:7pt;font-weight:700;padding:3px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:.7px;">Fase 2</span>
+      </div>
+      <div class="card-title">SGO 2026: Anticorpos-Droga Conjugados (ADCs) Redefinem o Tratamento do Câncer Ginecológico</div>
+      <div class="card-intro">
+        O congresso da Sociedade de Oncologia Ginecológica (SGO 2026) consolidou os <strong>ADCs</strong> como a maior transformação terapêutica atual da área — com resposta superior a 60% em doença platina-resistente, historicamente o cenário de pior prognóstico.
+      </div>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>ADC</th>
+            <th>Alvo</th>
+            <th>Tumor</th>
+            <th>Taxa de Resposta</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Mocertatug rezetecan</td>
+            <td>B7-H4</td>
+            <td>Ovário — platina-resistente</td>
+            <td><span class="resp-rate">62%</span></td>
+          </tr>
+          <tr>
+            <td>Mocertatug rezetecan</td>
+            <td>B7-H4</td>
+            <td>Endométrio recorrente</td>
+            <td><span class="resp-rate">67%</span></td>
+          </tr>
+          <tr>
+            <td>Mirvetuximab soravtansine</td>
+            <td>FRα (Folato)</td>
+            <td>Ovário — platina-sensível</td>
+            <td>Fase 2 + manutenção</td>
+          </tr>
+          <tr>
+            <td>DB-1311 / BNT324</td>
+            <td>B7H3</td>
+            <td>Colo / Ovário — PtR</td>
+            <td>Atividade significativa</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="impl-box impl-onc">
+        <div class="impl-label onc">Contexto Clínico</div>
+        <div class="impl-text">Taxas de resposta &gt;40% em platina-resistente representam transformação histórica. O perfil molecular do tumor (FRα, B7-H4, B7H3) passa a ser relevante no planejamento da sequência terapêutica. ADCs com aprovação esperada para 2026–2027.</div>
+      </div>
+      <div class="card-links">
+        <a href="https://oncodaily.com/not-to-miss/sgo-2026-congress-highlights" class="link-btn link-onc" target="_blank">↗ SGO 2026 — OncoDaily</a>
+        <a href="https://www.onclive.com/view/fda-approvals-adcs-and-major-breakthroughs-breaking-down-the-most-important-data-to-come-out-of-sgo-2026" class="link-btn link-onc" target="_blank">↗ OncLive — SGO 2026</a>
+      </div>
+    </div>
+
+    <!-- ─── CARD 4.2 ─── -->
+    <div class="card card-onc">
+      <div class="card-meta">
+        <span class="badge bs-red">KEYNOTE-A18 · 2026</span>
+        <span class="badge be-1a">Evidência 1A</span>
+        <span class="badge" style="background:#FADBD8;color:#7B241C;border:1px solid #F1948A;font-size:7pt;font-weight:700;padding:3px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:.7px;">Preview ASCO 2026</span>
+      </div>
+      <div class="card-title">Colo do Útero: KEYNOTE-A18 Consolida Novo Padrão + O que Acompanhar no ASCO 2026</div>
+
+      <div class="kf-block">
+        <div class="kf-label">KEYNOTE-A18 — Consolidado</div>
+        <ul class="kf-list">
+          <li><strong>Pembrolizumabe + quimioradioterapia</strong> confirmado como novo padrão de tratamento no câncer de colo localmente avançado de alto risco — ensaio fase 3, evidência 1A</li>
+          <li>Indicação prática: integrar imunoterapia ao planejamento radioterápico desde o início nos casos de alto risco</li>
+        </ul>
+      </div>
+
+      <div class="preview-grid">
+        <div class="preview-card">
+          <div class="preview-type">Endométrio</div>
+          <div class="preview-text">Dados de SG dos trials <strong>NRG-GY018</strong> e <strong>RUBY</strong> — manutenção com imunoterapia em pMMR/dMMR</div>
+        </div>
+        <div class="preview-card">
+          <div class="preview-type">Endométrio</div>
+          <div class="preview-text">ADC <strong>puxitatug samrotecan</strong> (Bluestar-Endometrial01) — dados de fase 2 em doença metastática</div>
+        </div>
+        <div class="preview-card">
+          <div class="preview-type">Colo / Ovário</div>
+          <div class="preview-text">ADCs TROP2: <strong>datopotamab deruxtecan</strong> e <strong>CBR-701</strong> em doença recorrente/metastática</div>
+        </div>
+        <div class="preview-card">
+          <div class="preview-type">Ovário</div>
+          <div class="preview-text">Vacina <strong>OSE2101 ± pembrolizumabe</strong> — TCR/PRAME-directed em ovário recorrente</div>
+        </div>
+      </div>
+
+      <div class="card-links">
+        <a href="https://www.onclive.com/view/poll-findings-highlight-the-most-anticipated-gynecologic-cancer-abstracts-at-asco-2026" class="link-btn link-onc" target="_blank">↗ ASCO 2026 — Abstracts (OncLive)</a>
+        <a href="https://www.medscape.com/viewarticle/mdangle-asco-2026-gynecologic-cancers-preview-2026a1000cdl" class="link-btn link-onc" target="_blank">↗ ASCO 2026 — Preview (Medscape)</a>
+      </div>
+    </div>
+
+  </div><!-- /sec-body onc -->
+
+  <!-- FOOTER -->
+  <div class="page-footer">
+    <div><strong>GO Insights</strong> · Boletim Científico · Edição 001 · Maio 2026 · Dr. Itamar Lssf</div>
+    <div>Próxima edição: <strong>Quarta-feira, 3 de junho de 2026</strong></div>
+  </div>
+  <div class="page-disclaimer">
+    Conteúdo destinado à atualização profissional médica. Não substitui julgamento clínico individualizado nem diretrizes institucionais locais.
+    Links de acesso direto incluídos para verificação independente dos artigos originais. Curadoria com suporte de inteligência artificial supervisionada.
+  </div>
+
+</div><!-- /page 4 -->
+
+</body>
+</html>
