@@ -7,6 +7,7 @@ import { TOKENS } from '@/lib/tokens';
 import { computeLeadMetrics } from '@/lib/leads-logic';
 import { KPI, SectionHeader, Empty, Donut, Btn } from '@/components/ui';
 import LeadCard from './LeadCard';
+import KanbanBoard from './KanbanBoard';
 
 interface Props {
   leads: Lead[];
@@ -26,6 +27,8 @@ const ORIGENS: LeadOrigem[] = [
   'Outra',
 ];
 
+type ViewMode = 'list' | 'kanban';
+
 export default function LeadsDashboard({
   leads,
   onSaveLead,
@@ -36,18 +39,19 @@ export default function LeadsDashboard({
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState<LeadStatus | 'all'>('all');
   const [filterOrigem, setFilterOrigem] = useState<LeadOrigem | 'all'>('all');
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
 
   const metrics = useMemo(() => computeLeadMetrics(leads), [leads]);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
     return leads.filter((l) => {
-      if (filterStatus !== 'all' && l.status !== filterStatus) return false;
+      if (viewMode === 'list' && filterStatus !== 'all' && l.status !== filterStatus) return false;
       if (filterOrigem !== 'all' && l.origem !== filterOrigem) return false;
       if (q && !l.nome.toLowerCase().includes(q) && !l.telefone.includes(q)) return false;
       return true;
     });
-  }, [leads, filterStatus, filterOrigem, search]);
+  }, [leads, filterStatus, filterOrigem, search, viewMode]);
 
   function handleStatusChange(id: string, status: LeadStatus) {
     const lead = leads.find((l) => l.id === id);
@@ -61,8 +65,28 @@ export default function LeadsDashboard({
     { label: 'Não agendou', value: metrics.perdeu, color: TOKENS.red },
   ];
 
+  const viewToggleStyle = (active: boolean): React.CSSProperties => ({
+    padding: '7px 12px',
+    borderRadius: 8,
+    border: `1.5px solid ${active ? TOKENS.primary : TOKENS.line}`,
+    background: active ? TOKENS.primary : '#fff',
+    color: active ? '#fff' : TOKENS.muted,
+    fontSize: 13,
+    fontWeight: 700,
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+    lineHeight: 1,
+  });
+
   return (
-    <div style={{ padding: '24px 28px', maxWidth: 960, margin: '0 auto' }}>
+    <div
+      style={{
+        padding: '24px 28px',
+        maxWidth: viewMode === 'kanban' ? 1200 : 960,
+        margin: '0 auto',
+        transition: 'max-width 0.3s ease',
+      }}
+    >
       <SectionHeader
         title="Atendimentos / Leads"
         subtitle={`Hoje · ${new Date().toLocaleDateString('pt-BR')}`}
@@ -102,7 +126,6 @@ export default function LeadsDashboard({
       {/* Analytics */}
       {leads.length > 0 && (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 22 }}>
-          {/* Status donut */}
           <div
             style={{
               background: '#fff',
@@ -131,7 +154,6 @@ export default function LeadsDashboard({
             </div>
           </div>
 
-          {/* Origem breakdown */}
           <div
             style={{
               background: '#fff',
@@ -203,15 +225,16 @@ export default function LeadsDashboard({
             size="sm"
             variant="ghost"
             style={{ marginLeft: 'auto' }}
-            onClick={() => setFilterStatus('retornar')}
+            onClick={() => { setViewMode('list'); setFilterStatus('retornar'); }}
           >
             Ver retornos
           </Btn>
         </div>
       )}
 
-      {/* Filters */}
+      {/* Filters + view toggle */}
       <div style={{ display: 'flex', gap: 10, marginBottom: 14, flexWrap: 'wrap', alignItems: 'center' }}>
+        {/* Search */}
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -223,46 +246,95 @@ export default function LeadsDashboard({
             fontSize: 13,
             outline: 'none',
             fontFamily: 'inherit',
-            width: 240,
+            width: 220,
             color: TOKENS.ink,
             background: '#fff',
           }}
         />
-        {(
-          [
-            { key: 'all', label: 'Todos', count: metrics.total },
-            { key: 'agendou', label: '✓ Agendou', count: metrics.agendou },
-            { key: 'pendente', label: '⏳ Pendente', count: metrics.pendente },
-            { key: 'retornar', label: '📞 Retornar', count: metrics.retornar },
-            { key: 'perdeu', label: '✗ Não agendou', count: metrics.perdeu },
-          ] as { key: LeadStatus | 'all'; label: string; count: number }[]
-        ).map((f) => (
+
+        {/* Status filters — list mode only */}
+        {viewMode === 'list' && (
+          <>
+            {(
+              [
+                { key: 'all', label: 'Todos', count: metrics.total },
+                { key: 'agendou', label: '✓ Agendou', count: metrics.agendou },
+                { key: 'pendente', label: '⏳ Pendente', count: metrics.pendente },
+                { key: 'retornar', label: '📞 Retornar', count: metrics.retornar },
+                { key: 'perdeu', label: '✗ Não agendou', count: metrics.perdeu },
+              ] as { key: LeadStatus | 'all'; label: string; count: number }[]
+            ).map((f) => (
+              <button
+                key={f.key}
+                onClick={() => setFilterStatus(f.key)}
+                style={{
+                  padding: '6px 13px',
+                  borderRadius: 20,
+                  border: `1.5px solid ${filterStatus === f.key ? TOKENS.primary : TOKENS.line}`,
+                  background: filterStatus === f.key ? TOKENS.primary : '#fff',
+                  color: filterStatus === f.key ? '#fff' : TOKENS.muted,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                }}
+              >
+                {f.label} {f.count > 0 && `(${f.count})`}
+              </button>
+            ))}
+          </>
+        )}
+
+        {/* Spacer */}
+        <div style={{ flex: 1 }} />
+
+        {/* View toggle */}
+        <div
+          style={{
+            display: 'flex',
+            gap: 4,
+            background: TOKENS.line2,
+            border: `1px solid ${TOKENS.line}`,
+            borderRadius: 10,
+            padding: 3,
+          }}
+        >
           <button
-            key={f.key}
-            onClick={() => setFilterStatus(f.key)}
-            style={{
-              padding: '6px 13px',
-              borderRadius: 20,
-              border: `1.5px solid ${filterStatus === f.key ? TOKENS.primary : TOKENS.line}`,
-              background: filterStatus === f.key ? TOKENS.primary : '#fff',
-              color: filterStatus === f.key ? '#fff' : TOKENS.muted,
-              fontSize: 12,
-              fontWeight: 600,
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-            }}
+            onClick={() => setViewMode('list')}
+            style={viewToggleStyle(viewMode === 'list')}
+            title="Visualização em lista"
           >
-            {f.label} {f.count > 0 && `(${f.count})`}
+            ≡ Lista
           </button>
-        ))}
+          <button
+            onClick={() => setViewMode('kanban')}
+            style={viewToggleStyle(viewMode === 'kanban')}
+            title="Visualização Kanban"
+          >
+            ▦ Kanban
+          </button>
+        </div>
       </div>
 
-      {/* Lead list */}
-      {filtered.length === 0 ? (
+      {/* Content */}
+      {leads.length === 0 ? (
         <Empty
           icon="☎️"
-          title={leads.length === 0 ? 'Nenhum atendimento registrado.' : 'Nenhum lead encontrado.'}
-          subtitle={leads.length === 0 ? 'Clique em "Novo Atendimento" para começar.' : 'Tente ajustar os filtros.'}
+          title="Nenhum atendimento registrado."
+          subtitle='Clique em "Novo Atendimento" para começar.'
+        />
+      ) : viewMode === 'kanban' ? (
+        <KanbanBoard
+          leads={filtered}
+          onSaveLead={onSaveLead}
+          onRemoveLead={onRemoveLead}
+          onConvert={onConvert}
+        />
+      ) : filtered.length === 0 ? (
+        <Empty
+          icon="🔍"
+          title="Nenhum lead encontrado."
+          subtitle="Tente ajustar os filtros."
         />
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
