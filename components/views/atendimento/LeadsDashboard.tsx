@@ -273,6 +273,7 @@ export default function LeadsDashboard({
               onStatusChange={handleStatusChange}
               onDelete={onRemoveLead}
               onConvert={onConvert}
+              onSave={onSaveLead}
             />
           ))}
         </div>

@@ -35,6 +35,21 @@ export const MOTIVO_LABELS: Record<LeadMotivo, string> = {
   outro:           '📋 Outro motivo',
 };
 
+export type ContatoResultado =
+  | 'atendeu'
+  | 'caixa_postal'
+  | 'nao_atendeu'
+  | 'retornou'
+  | 'recusou';
+
+export interface ContatoTentativa {
+  id: string;
+  data: string;
+  hora: string;
+  resultado: ContatoResultado;
+  nota?: string;
+}
+
 export interface Lead {
   id: string;
   nome: string;
@@ -51,4 +66,5 @@ export interface Lead {
   dataRetorno?: string;
   objetaoCodigo?: string;
   criadoPor: string;
+  contatos?: ContatoTentativa[];
 }
