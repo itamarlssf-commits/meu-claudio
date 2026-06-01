@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import type { Lead, LeadStatus } from '@/types/lead';
+import type { Lead, LeadStatus, ContatoTentativa, ContatoResultado } from '@/types/lead';
 import { TOKENS } from '@/lib/tokens';
+import { todayISO } from '@/lib/business-logic';
 import {
   leadAgingDays,
   isRetornoOverdue,
@@ -15,6 +16,7 @@ interface Props {
   onStatusChange: (id: string, status: LeadStatus) => void;
   onDelete: (id: string) => void;
   onConvert: (lead: Lead) => void;
+  onSave: (lead: Lead) => void;
 }
 
 const STATUS_STYLE: Record<LeadStatus, { bg: string; color: string; bar: string; label: string }> = {
@@ -23,6 +25,39 @@ const STATUS_STYLE: Record<LeadStatus, { bg: string; color: string; bar: string;
   retornar: { bg: TOKENS.blueSoft,   color: '#1e3a8a', bar: TOKENS.blue,   label: '📞 Retornar' },
   perdeu:   { bg: TOKENS.redSoft,    color: '#991b1b', bar: TOKENS.red,    label: 'Não agendou' },
 };
+
+const RESULTADO_CONFIG: Record<ContatoResultado, { icone: string; cor: string; bg: string; label: string }> = {
+  atendeu:      { icone: '✅', cor: '#166534', bg: TOKENS.greenSoft, label: 'Atendeu' },
+  caixa_postal: { icone: '📬', cor: TOKENS.muted,  bg: TOKENS.line2,    label: 'Caixa postal' },
+  nao_atendeu:  { icone: '📵', cor: '#92400e', bg: TOKENS.amberSoft, label: 'Não atendeu' },
+  retornou:     { icone: '🔄', cor: '#1e3a8a', bg: TOKENS.blueSoft,  label: 'Retornou' },
+  recusou:      { icone: '❌', cor: '#991b1b', bg: TOKENS.redSoft,   label: 'Recusou' },
+};
+
+const RESULTADO_OPTIONS: { valor: ContatoResultado; icone: string; label: string }[] = [
+  { valor: 'atendeu',      icone: '✅', label: 'Atendeu' },
+  { valor: 'caixa_postal', icone: '📬', label: 'Caixa postal' },
+  { valor: 'nao_atendeu',  icone: '📵', label: 'Não atendeu' },
+  { valor: 'retornou',     icone: '🔄', label: 'Retornou' },
+  { valor: 'recusou',      icone: '❌', label: 'Recusou' },
+];
+
+function genContatoId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+}
+
+function gcalLink(lead: Lead): string {
+  const date = lead.dataConsulta!.replace(/-/g, '');
+  const time = lead.horaConsulta ? lead.horaConsulta.replace(':', '') + '00' : '080000';
+  const [h, m] = lead.horaConsulta ? lead.horaConsulta.split(':').map(Number) : [8, 0];
+  const endH = String(h + 1).padStart(2, '0');
+  const endTime = `${endH}${String(m).padStart(2, '0')}00`;
+  const start = `${date}T${time}`;
+  const end = `${date}T${endTime}`;
+  const title = encodeURIComponent(`Consulta Dr. Itamar – ${lead.nome}`);
+  const details = encodeURIComponent(`Motivo: ${lead.motivoLabel}\nTelefone: ${lead.telefone}`);
+  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${end}&details=${details}`;
+}
 
 function AgingBadge({ days }: { days: number }) {
   const color = days < 2 ? TOKENS.green : days < 5 ? TOKENS.amber : TOKENS.red;
@@ -44,13 +79,48 @@ function AgingBadge({ days }: { days: number }) {
   );
 }
 
-export default function LeadCard({ lead, onStatusChange, onDelete, onConvert }: Props) {
+function ContatoItem({ contato }: { contato: ContatoTentativa }) {
+  const cfg = RESULTADO_CONFIG[contato.resultado];
+  return (
+    <div style={{ display: 'flex', gap: 8, alignItems: 'baseline', flexWrap: 'wrap', fontSize: 12 }}>
+      <span
+        style={{
+          background: cfg.bg,
+          color: cfg.cor,
+          padding: '1px 8px',
+          borderRadius: 20,
+          fontWeight: 700,
+          fontSize: 11,
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {cfg.icone} {cfg.label}
+      </span>
+      <span style={{ color: TOKENS.muted, whiteSpace: 'nowrap' }}>
+        {new Date(contato.data + 'T12:00:00').toLocaleDateString('pt-BR')} às {contato.hora}
+      </span>
+      {contato.nota && (
+        <span style={{ color: TOKENS.ink2, fontStyle: 'italic' }}>&quot;{contato.nota}&quot;</span>
+      )}
+    </div>
+  );
+}
+
+export default function LeadCard({ lead, onStatusChange, onDelete, onConvert, onSave }: Props) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [contatosOpen, setContatosOpen] = useState(false);
+  const [addFormOpen, setAddFormOpen] = useState(false);
+  const [novaData, setNovaData] = useState('');
+  const [novaHora, setNovaHora] = useState('');
+  const [novoResultado, setNovoResultado] = useState<ContatoResultado | ''>('');
+  const [novaNota, setNovaNota] = useState('');
+
   const sc = STATUS_STYLE[lead.status];
   const aging = leadAgingDays(lead);
   const overdue = isRetornoOverdue(lead);
   const waLink = lead.status === 'agendou' ? whatsAppConfirmacao(lead) : whatsAppRetornar(lead);
+  const numContatos = lead.contatos?.length ?? 0;
 
   function handleCopyPhone() {
     navigator.clipboard.writeText(lead.telefone).then(() => {
@@ -58,6 +128,44 @@ export default function LeadCard({ lead, onStatusChange, onDelete, onConvert }: 
       setTimeout(() => setCopied(false), 1500);
     });
   }
+
+  function openAddForm() {
+    const now = new Date();
+    setNovaData(todayISO());
+    setNovaHora(
+      `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`,
+    );
+    setNovoResultado('');
+    setNovaNota('');
+    setAddFormOpen(true);
+    setContatosOpen(true);
+  }
+
+  function registrarContato() {
+    if (!novoResultado) return;
+    const tentativa: ContatoTentativa = {
+      id: genContatoId(),
+      data: novaData,
+      hora: novaHora,
+      resultado: novoResultado,
+      nota: novaNota.trim() || undefined,
+    };
+    onSave({ ...lead, contatos: [tentativa, ...(lead.contatos ?? [])] });
+    setAddFormOpen(false);
+    setNovoResultado('');
+    setNovaNota('');
+  }
+
+  const inputStyle: React.CSSProperties = {
+    padding: '6px 10px',
+    border: `1px solid ${TOKENS.line}`,
+    borderRadius: 8,
+    fontSize: 12,
+    fontFamily: 'inherit',
+    background: '#fff',
+    color: TOKENS.ink,
+    outline: 'none',
+  };
 
   return (
     <div
@@ -86,6 +194,7 @@ export default function LeadCard({ lead, onStatusChange, onDelete, onConvert }: 
 
       {/* Content */}
       <div style={{ flex: 1, minWidth: 0 }}>
+        {/* Header row */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 4 }}>
           <strong style={{ fontSize: 15, color: TOKENS.ink }}>{lead.nome}</strong>
           <span
@@ -115,8 +224,30 @@ export default function LeadCard({ lead, onStatusChange, onDelete, onConvert }: 
               Retorno vencido
             </span>
           )}
+          {/* Contatos badge */}
+          <button
+            onClick={() => setContatosOpen((v) => !v)}
+            style={{
+              background: numContatos === 0
+                ? TOKENS.line2
+                : numContatos < 3 ? TOKENS.blueSoft : TOKENS.amberSoft,
+              color: numContatos === 0
+                ? TOKENS.muted
+                : numContatos < 3 ? '#1e3a8a' : '#92400e',
+              borderRadius: 20,
+              padding: '2px 9px',
+              fontSize: 10,
+              fontWeight: 700,
+              border: 'none',
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+            }}
+          >
+            📞 {numContatos} {numContatos === 1 ? 'contato' : 'contatos'}
+          </button>
         </div>
 
+        {/* Meta row */}
         <div
           style={{
             fontSize: 12,
@@ -144,11 +275,167 @@ export default function LeadCard({ lead, onStatusChange, onDelete, onConvert }: 
               📅 Retornar em {new Date(lead.dataRetorno + 'T12:00:00').toLocaleDateString('pt-BR')}
             </span>
           )}
+          {lead.dataConsulta && lead.status === 'agendou' && (
+            <span style={{ color: '#166534', fontWeight: 600 }}>
+              📅 Consulta: {new Date(lead.dataConsulta + 'T12:00:00').toLocaleDateString('pt-BR')}
+              {lead.horaConsulta && ` às ${lead.horaConsulta}`}
+            </span>
+          )}
         </div>
 
         {lead.observacoes && (
           <div style={{ fontSize: 12, color: TOKENS.muted, marginTop: 4, fontStyle: 'italic' }}>
             &quot;{lead.observacoes}&quot;
+          </div>
+        )}
+
+        {/* Contatos expandable section */}
+        {contatosOpen && (
+          <div
+            style={{
+              marginTop: 10,
+              borderTop: `1px dashed ${TOKENS.line}`,
+              paddingTop: 10,
+            }}
+          >
+            {/* Timeline */}
+            {numContatos > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginBottom: 10 }}>
+                {lead.contatos!.map((c) => (
+                  <ContatoItem key={c.id} contato={c} />
+                ))}
+              </div>
+            )}
+
+            {/* Inline form */}
+            {addFormOpen ? (
+              <div
+                style={{
+                  background: TOKENS.line2,
+                  border: `1px solid ${TOKENS.line}`,
+                  borderRadius: 10,
+                  padding: 12,
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 10,
+                    fontWeight: 800,
+                    color: TOKENS.muted,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.06em',
+                    marginBottom: 10,
+                  }}
+                >
+                  Registrar tentativa de contato
+                </div>
+
+                {/* Data + Hora */}
+                <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                  <input
+                    type="date"
+                    value={novaData}
+                    onChange={(e) => setNovaData(e.target.value)}
+                    style={inputStyle}
+                  />
+                  <input
+                    type="time"
+                    value={novaHora}
+                    onChange={(e) => setNovaHora(e.target.value)}
+                    style={inputStyle}
+                  />
+                </div>
+
+                {/* Resultado pills */}
+                <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginBottom: 8 }}>
+                  {RESULTADO_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.valor}
+                      onClick={() => setNovoResultado(opt.valor)}
+                      style={{
+                        padding: '5px 10px',
+                        borderRadius: 20,
+                        border: `1.5px solid ${novoResultado === opt.valor ? RESULTADO_CONFIG[opt.valor].cor : TOKENS.line}`,
+                        background: novoResultado === opt.valor
+                          ? RESULTADO_CONFIG[opt.valor].bg
+                          : '#fff',
+                        color: novoResultado === opt.valor
+                          ? RESULTADO_CONFIG[opt.valor].cor
+                          : TOKENS.muted,
+                        fontSize: 11,
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        fontFamily: 'inherit',
+                      }}
+                    >
+                      {opt.icone} {opt.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Nota */}
+                <textarea
+                  value={novaNota}
+                  onChange={(e) => setNovaNota(e.target.value)}
+                  placeholder="Nota (opcional)"
+                  rows={2}
+                  style={{ ...inputStyle, width: '100%', resize: 'none', boxSizing: 'border-box', marginBottom: 8 }}
+                />
+
+                {/* Buttons */}
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button
+                    onClick={registrarContato}
+                    disabled={!novoResultado}
+                    style={{
+                      padding: '6px 14px',
+                      borderRadius: 8,
+                      border: 'none',
+                      background: novoResultado ? TOKENS.primary : TOKENS.line,
+                      color: novoResultado ? '#fff' : TOKENS.muted,
+                      fontSize: 12,
+                      fontWeight: 700,
+                      cursor: novoResultado ? 'pointer' : 'not-allowed',
+                      fontFamily: 'inherit',
+                    }}
+                  >
+                    ✓ Registrar
+                  </button>
+                  <button
+                    onClick={() => setAddFormOpen(false)}
+                    style={{
+                      padding: '6px 12px',
+                      borderRadius: 8,
+                      border: `1px solid ${TOKENS.line}`,
+                      background: '#fff',
+                      color: TOKENS.muted,
+                      fontSize: 12,
+                      cursor: 'pointer',
+                      fontFamily: 'inherit',
+                    }}
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={openAddForm}
+                style={{
+                  padding: '5px 12px',
+                  borderRadius: 8,
+                  border: `1px dashed ${TOKENS.primary}50`,
+                  background: `${TOKENS.primary}08`,
+                  color: TOKENS.primary,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                }}
+              >
+                + Registrar contato
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -217,6 +504,33 @@ export default function LeadCard({ lead, onStatusChange, onDelete, onConvert }: 
           >
             📞
           </button>
+        )}
+
+        {/* Google Calendar link */}
+        {lead.status === 'agendou' && lead.dataConsulta && (
+          <a
+            href={gcalLink(lead)}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              background: '#fff7ed',
+              color: '#c2410c',
+              border: '1px solid #fed7aa',
+              borderRadius: 7,
+              padding: '5px 10px',
+              fontSize: 11,
+              fontWeight: 700,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+              textDecoration: 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 4,
+            }}
+            title="Adicionar ao Google Calendar"
+          >
+            📅 GCal
+          </a>
         )}
 
         {/* Convert to patient */}

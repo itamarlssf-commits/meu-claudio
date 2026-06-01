@@ -6,27 +6,27 @@ import { todayISO } from '@/lib/business-logic';
 
 export const SCRIPTS: Record<LeadMotivo, string> = {
   gineco:
-    'O Dr. Itamar tem um atendimento muito diferenciado — ele dedica tempo real a cada paciente, escuta de verdade e usa os protocolos mais atuais da medicina. Muitas pacientes nos dizem que foi a primeira vez que se sentiram verdadeiramente ouvidas e cuidadas.',
+    'Que boa iniciativa cuidar da saúde! O Dr. Itamar é muito diferenciado — ele realmente escuta, tem tempo de verdade para você na consulta e usa os protocolos mais modernos. Muitas pacientes nos contam que foi a primeira vez que se sentiram verdadeiramente cuidadas. Vamos garantir um horário especial para você?',
   pre_natal:
-    'O pré-natal com o Dr. Itamar é multiprofissional e inclui o aplicativo Nattal, onde a paciente acompanha tudo pelo celular em tempo real. O acompanhamento vai do início até o parto humanizado — ela nunca fica sozinha em nenhuma etapa.',
+    'Que notícia maravilhosa! O pré-natal com o Dr. Itamar é muito especial — acompanhamento multiprofissional, aplicativo Nattal para acompanhar tudo pelo celular, e presença real do início até o parto humanizado. Você não vai ficar sozinha em nenhum momento. Que fase linda!',
   endometriose:
-    'O Dr. Itamar é especialista em endometriose clínica e cirúrgica. Ele tem um protocolo específico que realmente transforma a qualidade de vida. Muitas pacientes chegam com anos de sofrimento sem diagnóstico correto — e finalmente encontram a solução aqui.',
+    'Que bom que você está buscando cuidado! O Dr. Itamar é especialista em endometriose e tem um protocolo que realmente transforma a qualidade de vida. Muitas pacientes chegam aqui depois de anos de sofrimento e finalmente encontram a resposta que estavam buscando. Você está no lugar certo!',
   anticoncep:
-    'O Dr. Itamar é referência em anticoncepção de longa duração — DIU e Implanon. Ele apresenta todas as opções com calma, sem pressão, para que a paciente escolha o que faz mais sentido para ela e para sua saúde.',
+    'Que bom que está pensando nisso! O Dr. Itamar é referência em anticoncepção de longa duração — DIU e Implanon — e tem uma abordagem muito cuidadosa: apresenta todas as opções com calma e sem pressa, para que você escolha o que faz mais sentido para a sua vida.',
   cirurgia:
-    'O Dr. Itamar realiza cirurgias ginecológicas com foco total na segurança e na recuperação da paciente. Ela é acompanhada em todo o processo — antes, durante e depois do procedimento, com toda a equipe disponível.',
+    'Entendo que é uma decisão importante e que pode gerar alguma ansiedade — é completamente natural. O Dr. Itamar acompanha cada paciente em todo o processo, antes, durante e depois, e toda a equipe está disponível para você. Você vai estar em mãos muito cuidadosas.',
   parto:
-    'O Dr. Itamar é referência em parto humanizado — seja normal ou cesariana. Ele respeita o plano de parto, está presente de verdade e garante que esse momento seja o mais seguro e bonito possível para mãe e bebê.',
+    'Que momento lindo! O Dr. Itamar é referência em parto humanizado e garante estar presente de verdade no seu parto — não manda substituto. Ele respeita cada detalhe do plano de parto e cuida para que esse seja o momento mais seguro e especial possível para você e seu bebê.',
   histeroscopia:
-    'A histeroscopia com o Dr. Itamar é feita com todo o cuidado para a paciente se sentir segura e tranquila. Ele explica cada etapa do procedimento e garante um pós-procedimento bem acompanhado.',
+    'Entendo que pode gerar uma certa insegurança não saber o que esperar. O Dr. Itamar explica cada etapa antes e durante o procedimento, e você vai se sentir completamente tranquila e acolhida. Ele faz tudo com muito cuidado e atenção.',
   consulta_retorno:
-    'Que ótimo que a senhora está retornando! O Dr. Itamar vai adorar te ver de novo. Ele mantém todo o histórico e garante um acompanhamento contínuo e personalizado para você.',
+    'Que saudade! O Dr. Itamar vai adorar receber você de novo. Ele mantém todo o histórico e sabe exatamente onde vocês pararam — é aquele acompanhamento contínuo e personalizado que você merece.',
   ultrassonografia:
-    'A ultrassonografia no consultório do Dr. Itamar é realizada com equipamento de última geração, com toda a atenção e cuidado. O Dr. explica cada detalhe durante o exame para que a paciente entenda tudo o que está acontecendo.',
+    'Aqui o exame é feito com equipamento de última geração e o melhor: o Dr. Itamar explica tudo em tempo real, para você sair sabendo exatamente o que está acontecendo. Sem dúvidas, sem angústia — só clareza e cuidado.',
   vacina:
-    'O consultório do Dr. Itamar oferece um calendário vacinal personalizado para cada paciente. Ele orienta sobre quais vacinas são indicadas para o seu perfil e garante um acompanhamento seguro.',
+    'Que ótima iniciativa cuidar da saúde preventiva! O Dr. Itamar oferece um calendário vacinal personalizado para o seu perfil — ele orienta quais vacinas são indicadas para você e garante que tudo seja feito com segurança e atenção.',
   outro:
-    'Conte mais sobre o que está sentindo. O Dr. Itamar tem um atendimento muito completo — certamente vamos encontrar a melhor solução para você.',
+    'Que bom que nos procurou! Pode me contar um pouquinho mais sobre o que está sentindo? Assim eu consigo te orientar da forma certa. O Dr. Itamar tem um atendimento muito completo — tenho certeza que vamos encontrar a melhor solução juntos.',
 };
 
 // ── Objeções com respostas ─────────────────────────────────────────
@@ -42,43 +42,43 @@ export const OBJECOES: Objecao[] = [
     codigo: 'pensar',
     titulo: '💭 "Vou pensar..."',
     resposta:
-      '"Claro! Só me conta o que está te impedindo de marcar hoje — às vezes consigo te ajudar. E olha, a agenda do Dr. Itamar está bem concorrida essa semana. Não quero que você perca o horário ideal."',
+      '"Claro, sem problema nenhum! Só queria entender melhor — tem alguma coisa específica que está te dando dúvida? Às vezes consigo te ajudar aqui mesmo. E só para você saber: a agenda está bem concorrida essa semana — não quero que você fique sem um horário especial."',
   },
   {
     codigo: 'caro',
     titulo: '💰 "Está caro..."',
     resposta:
-      '"Entendo. O valor é pelo atendimento completo — tempo real de consulta, protocolo personalizado e toda a equipe disponível para você. Mas me conta: o valor ficou fora do orçamento agora ou tem outra preocupação?"',
+      '"Claro que sim, é muito natural avaliar. O que está incluso é o tempo real de consulta, protocolo personalizado e todo o suporte da equipe — não é uma consulta rápida de 15 minutos. Mas me conta: é o momento financeiro que está pesando ou tem alguma outra dúvida que posso esclarecer?"',
   },
   {
     codigo: 'agenda',
     titulo: '📅 "Deixa eu ver minha agenda..."',
     resposta:
-      '"Perfeito! Posso reservar um horário para você enquanto verifica? Se não conseguir vir, é só me avisar com antecedência que a gente libera sem problema nenhum. Sem pressão!"',
+      '"Claro! Enquanto você verifica, posso já separar um horário reservado para você? Se depois não encaixar, é só me avisar com antecedência que liberamos sem problema algum — zero pressão da nossa parte!"',
   },
   {
     codigo: 'pesquisar',
     titulo: '🔍 "Quero pesquisar o médico..."',
     resposta:
-      '"Com certeza! O Instagram do Dr. Itamar é @itamarsantana.go — você vai ver bastante sobre o trabalho dele lá. Se quiser, já marco o horário e você cancela sem problema se não se sentir confortável."',
+      '"Ótimo! Fica totalmente à vontade — é importante se sentir segura. O Instagram do Dr. Itamar é @itamarsantana.go, você vai se sentir muito mais tranquila depois de ver o trabalho dele. Posso reservar um horário enquanto isso? Se não quiser manter, cancela sem compromisso nenhum."',
   },
   {
     codigo: 'ligar',
     titulo: '📞 "Ligo depois..."',
     resposta:
-      '"Claro! Mas já posso te passar os horários disponíveis para você escolher agora? Assim quando ligar de volta, você já sabe o que tem. A agenda costuma fechar rápido."',
+      '"Claro, sem problema! Só queria já te deixar com as opções na cabeça: quais dias e horários costumam funcionar melhor para você? Assim quando você ligar, a gente resolve rapidinho e não corre o risco de a agenda fechar."',
   },
   {
     codigo: 'plano',
     titulo: '🏥 "Tenho plano de saúde..."',
     resposta:
-      '"Entendo perfeitamente! O diferencial do Dr. Itamar é o acompanhamento personalizado, o tempo dedicado e o protocolo próprio — coisas que o plano infelizmente não consegue oferecer. Muitas pacientes com plano escolhem o Dr. Itamar justamente por isso."',
+      '"Faz todo sentido pensar nisso! A diferença principal é o tempo e a atenção que o Dr. Itamar dedica — consultas de 1 hora, protocolo próprio, acompanhamento contínuo e personalizado. É uma experiência completamente diferente. Muitas pacientes que têm plano escolhem vir aqui justamente por isso. Posso te explicar como funciona?"',
   },
   {
     codigo: 'medico',
     titulo: '👩‍⚕️ "Já tenho médico..."',
     resposta:
-      '"Que ótimo que você já tem acompanhamento! Caso queira uma segunda opinião ou simplesmente conhecer uma abordagem diferente, o Dr. Itamar recebe muito bem. Sem compromisso — é só uma consulta."',
+      '"Que ótimo que você já tem acompanhamento — é muito importante ter essa referência! O Dr. Itamar recebe muito bem para uma segunda opinião, sem pressão nenhuma. Às vezes um novo olhar traz informações valiosas. Seria só uma consulta, sem compromisso de trocar de médico."',
   },
 ];
 
