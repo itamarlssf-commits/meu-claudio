@@ -16,7 +16,7 @@ import {
   deleteDoc,
   serverTimestamp,
 } from 'firebase/firestore';
-import { getStorage } from 'firebase/storage';
+import { getStorage, type FirebaseStorage } from 'firebase/storage';
 import type { AppData } from '@/types/paciente';
 import type { Lead } from '@/types/lead';
 
@@ -35,8 +35,15 @@ export const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getA
 
 export const auth = getAuth(app);
 export const db = getFirestore(app);
-export const storage = getStorage(app);
 export const DOC_REF = doc(db, 'consultorio', 'principal');
+
+// Storage é inicializado sob demanda: getStorage() lança erro no carregamento do
+// módulo se o storageBucket não estiver configurado, o que quebraria o app inteiro.
+let _storage: FirebaseStorage | null = null;
+export function getStorageLazy(): FirebaseStorage {
+  if (!_storage) _storage = getStorage(app);
+  return _storage;
+}
 
 export async function signIn(email: string, senha: string): Promise<User> {
   const cred = await signInWithEmailAndPassword(auth, email, senha);

@@ -20,7 +20,7 @@ import {
   serverTimestamp,
 } from 'firebase/firestore';
 import { ref, uploadString, getDownloadURL } from 'firebase/storage';
-import { db, storage, firebaseConfigValues } from '@/lib/firebase';
+import { db, getStorageLazy, firebaseConfigValues } from '@/lib/firebase';
 import type { Funcionaria, RegistroPonto, UsuarioPonto } from '@/types/ponto';
 
 const FUNCIONARIAS_COL = collection(db, 'ponto_funcionarias');
@@ -153,7 +153,7 @@ export async function uploadSelfie(
   dataUrl: string,
 ): Promise<string> {
   const caminho = `ponto/selfies/${funcionariaId}/${registroId}.jpg`;
-  const storageRef = ref(storage, caminho);
+  const storageRef = ref(getStorageLazy(), caminho);
   await uploadString(storageRef, dataUrl, 'data_url');
   return getDownloadURL(storageRef);
 }
