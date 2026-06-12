@@ -16,6 +16,7 @@ import {
   deleteDoc,
   serverTimestamp,
 } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 import type { AppData } from '@/types/paciente';
 import type { Lead } from '@/types/lead';
 
@@ -28,10 +29,13 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+export const firebaseConfigValues = firebaseConfig;
+
+export const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 
 export const auth = getAuth(app);
 export const db = getFirestore(app);
+export const storage = getStorage(app);
 export const DOC_REF = doc(db, 'consultorio', 'principal');
 
 export async function signIn(email: string, senha: string): Promise<User> {
