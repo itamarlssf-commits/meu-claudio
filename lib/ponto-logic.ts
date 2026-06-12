@@ -1,7 +1,12 @@
 // Utilitários do módulo de Ponto Eletrônico: datas, horas trabalhadas,
 // relatório mensal, compressão de selfie e captura de GPS.
 
-import type { Funcionaria, RegistroPonto } from '@/types/ponto';
+import type { Funcionaria, RegistroPonto, TipoRegistro } from '@/types/ponto';
+import { TIPOS_ABRE } from '@/types/ponto';
+
+function abre(tipo: TipoRegistro): boolean {
+  return TIPOS_ABRE.includes(tipo);
+}
 
 export function novoId(): string {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
@@ -54,14 +59,16 @@ export function formatDuracao(ms: number): string {
 // ── Cálculo de horas trabalhadas ──────────────────────────────────
 
 export interface ParRegistro {
-  entrada: RegistroPonto;
-  saida?: RegistroPonto;
-  duracaoMs: number; // 0 quando ainda sem saída
+  inicio: RegistroPonto; // abre o período (entrada ou volta do intervalo)
+  fim?: RegistroPonto; // fecha o período (saída ou início do intervalo)
+  duracaoMs: number; // 0 quando ainda em aberto
 }
 
 /**
- * Pareia entrada→saída de uma lista de registros (de um mesmo dia/funcionária),
- * em ordem cronológica. Retorna os pares e o total de ms trabalhados.
+ * Pareia períodos de trabalho de uma lista de registros (mesmo dia/funcionária),
+ * em ordem cronológica. Registros que "abrem" (entrada, volta do intervalo) começam
+ * a contar; registros que "fecham" (saída, início do intervalo) param de contar.
+ * Assim o tempo de intervalo/almoço é automaticamente descontado.
  */
 export function parearRegistros(registros: RegistroPonto[]): {
   pares: ParRegistro[];
@@ -70,27 +77,28 @@ export function parearRegistros(registros: RegistroPonto[]): {
   const ordenados = [...registros].sort((a, b) => a.timestamp - b.timestamp);
   const pares: ParRegistro[] = [];
   let totalMs = 0;
-  let entradaAberta: RegistroPonto | null = null;
+  let aberto: RegistroPonto | null = null;
 
   for (const reg of ordenados) {
-    if (reg.tipo === 'entrada') {
-      if (entradaAberta) {
-        // entrada sem saída anterior — registra em aberto
-        pares.push({ entrada: entradaAberta, duracaoMs: 0 });
+    if (abre(reg.tipo)) {
+      if (aberto) {
+        // abertura sem fechamento anterior — registra em aberto
+        pares.push({ inicio: aberto, duracaoMs: 0 });
       }
-      entradaAberta = reg;
-    } else if (reg.tipo === 'saida') {
-      if (entradaAberta) {
-        const dur = reg.timestamp - entradaAberta.timestamp;
-        pares.push({ entrada: entradaAberta, saida: reg, duracaoMs: dur });
+      aberto = reg;
+    } else {
+      // fecha
+      if (aberto) {
+        const dur = reg.timestamp - aberto.timestamp;
+        pares.push({ inicio: aberto, fim: reg, duracaoMs: dur });
         totalMs += dur;
-        entradaAberta = null;
+        aberto = null;
       }
-      // saída sem entrada é ignorada no cálculo
+      // fechamento sem abertura é ignorado no cálculo
     }
   }
-  if (entradaAberta) {
-    pares.push({ entrada: entradaAberta, duracaoMs: 0 });
+  if (aberto) {
+    pares.push({ inicio: aberto, duracaoMs: 0 });
   }
   return { pares, totalMs };
 }
@@ -107,14 +115,22 @@ export function agruparPorDia(
   return mapa;
 }
 
-/** Status atual do dia para uma funcionária: está trabalhando ou não? */
+export type EstadoExpediente = 'fora' | 'trabalhando' | 'intervalo';
+
+/** Status atual do dia para uma funcionária a partir do último registro. */
 export function statusAtual(registrosDoDia: RegistroPonto[]): {
-  trabalhando: boolean;
+  estado: EstadoExpediente;
   ultimoRegistro?: RegistroPonto;
 } {
   const ordenados = [...registrosDoDia].sort((a, b) => a.timestamp - b.timestamp);
   const ultimo = ordenados[ordenados.length - 1];
-  return { trabalhando: ultimo?.tipo === 'entrada', ultimoRegistro: ultimo };
+  let estado: EstadoExpediente = 'fora';
+  if (ultimo) {
+    if (ultimo.tipo === 'inicio_intervalo') estado = 'intervalo';
+    else if (abre(ultimo.tipo)) estado = 'trabalhando';
+    else estado = 'fora';
+  }
+  return { estado, ultimoRegistro: ultimo };
 }
 
 export interface LinhaRelatorio {

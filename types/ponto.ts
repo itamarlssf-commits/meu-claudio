@@ -1,12 +1,18 @@
 // Tipos do módulo de Ponto Eletrônico (ferramenta de controle interno).
 
-export type TipoRegistro = 'entrada' | 'saida';
+export type TipoRegistro = 'entrada' | 'inicio_intervalo' | 'fim_intervalo' | 'saida';
 export type PapelUsuario = 'admin' | 'funcionaria';
 
 export const TIPO_LABELS: Record<TipoRegistro, string> = {
   entrada: 'Entrada',
+  inicio_intervalo: 'Saída p/ intervalo',
+  fim_intervalo: 'Volta do intervalo',
   saida: 'Saída',
 };
+
+// Tipos que abrem um período de trabalho (começa a contar) e que fecham (para de contar).
+export const TIPOS_ABRE: TipoRegistro[] = ['entrada', 'fim_intervalo'];
+export const TIPOS_FECHA: TipoRegistro[] = ['saida', 'inicio_intervalo'];
 
 export interface Funcionaria {
   id: string; // = uid do Firebase Auth quando a funcionária tem login

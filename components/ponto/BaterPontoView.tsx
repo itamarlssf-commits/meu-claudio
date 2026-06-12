@@ -6,14 +6,22 @@ import { usePontoStore } from '@/store/use-ponto-store';
 import useBaterPonto from '@/hooks/useBaterPonto';
 import {
   dataLocal,
-  horaLocal,
   formatDuracao,
   parearRegistros,
   statusAtual,
 } from '@/lib/ponto-logic';
 import { TOKENS } from '@/lib/tokens';
 import { Card, Btn, Chip } from '@/components/ui';
+import { TIPO_LABELS } from '@/types/ponto';
 import type { TipoRegistro } from '@/types/ponto';
+
+type ChipColor = 'green' | 'red' | 'amber' | 'blue' | 'gray';
+const CHIP_COR: Record<TipoRegistro, ChipColor> = {
+  entrada: 'green',
+  saida: 'red',
+  inicio_intervalo: 'amber',
+  fim_intervalo: 'blue',
+};
 
 export default function BaterPontoView() {
   const usuario = usePontoStore((s) => s.usuario);
@@ -24,20 +32,24 @@ export default function BaterPontoView() {
   const inputRef = useRef<HTMLInputElement>(null);
   const tipoPendente = useRef<TipoRegistro>('entrada');
   const [mensagem, setMensagem] = useState<string>('');
+  const [semFoto, setSemFoto] = useState(false);
 
   const hoje = dataLocal();
   const registrosHoje = useMemo(
     () => registros.filter((r) => r.data === hoje),
     [registros, hoje],
   );
-  const { trabalhando } = statusAtual(registrosHoje);
+  const { estado } = statusAtual(registrosHoje);
   const { totalMs } = useMemo(() => parearRegistros(registrosHoje), [registrosHoje]);
-
-  const proximoTipo: TipoRegistro = trabalhando ? 'saida' : 'entrada';
 
   function abrirCamera(tipo: TipoRegistro) {
     tipoPendente.current = tipo;
     inputRef.current?.click();
+  }
+
+  function acionar(tipo: TipoRegistro) {
+    if (semFoto) registrar(tipo, null);
+    else abrirCamera(tipo);
   }
 
   async function registrar(tipo: TipoRegistro, selfie: File | null) {
@@ -50,7 +62,7 @@ export default function BaterPontoView() {
         tipo,
         selfie,
       });
-      setMensagem(tipo === 'entrada' ? '✅ Entrada registrada!' : '✅ Saída registrada!');
+      setMensagem(`✅ ${TIPO_LABELS[tipo]} registrada!`);
     } catch {
       setMensagem('⚠️ Não foi possível registrar. Tente novamente.');
     }
@@ -115,37 +127,34 @@ export default function BaterPontoView() {
             })}
           </div>
           <div style={{ marginBottom: 12 }}>
-            {trabalhando ? (
+            {estado === 'trabalhando' && (
               <Chip color="green">● Trabalhando desde {ordenadosHoje[ordenadosHoje.length - 1]?.hora}</Chip>
-            ) : (
-              <Chip color="gray">○ Fora de expediente</Chip>
             )}
+            {estado === 'intervalo' && (
+              <Chip color="amber">☕ Em intervalo desde {ordenadosHoje[ordenadosHoje.length - 1]?.hora}</Chip>
+            )}
+            {estado === 'fora' && <Chip color="gray">○ Fora de expediente</Chip>}
           </div>
           <div style={{ fontSize: 13, color: TOKENS.ink2 }}>
             Horas hoje: <strong>{formatDuracao(totalMs)}</strong>
           </div>
         </Card>
 
-        {/* Botão principal */}
-        <Btn
-          variant={proximoTipo === 'entrada' ? 'success' : 'danger'}
-          size="lg"
-          disabled={salvando}
-          onClick={() => abrirCamera(proximoTipo)}
-          style={{
-            width: '100%',
-            justifyContent: 'center',
-            fontSize: 18,
-            padding: '20px',
-            borderRadius: 14,
-          }}
-        >
-          {salvando
-            ? 'Registrando…'
-            : proximoTipo === 'entrada'
-              ? '📸 Registrar Entrada'
-              : '📸 Registrar Saída'}
-        </Btn>
+        {/* Botões contextuais */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {estado === 'fora' && (
+            <BotaoPonto tipo="entrada" variant="success" label="Registrar Entrada" salvando={salvando} onAcionar={acionar} />
+          )}
+          {estado === 'trabalhando' && (
+            <>
+              <BotaoPonto tipo="inicio_intervalo" variant="accent" label="Sair para intervalo" salvando={salvando} onAcionar={acionar} />
+              <BotaoPonto tipo="saida" variant="danger" label="Registrar Saída" salvando={salvando} onAcionar={acionar} />
+            </>
+          )}
+          {estado === 'intervalo' && (
+            <BotaoPonto tipo="fim_intervalo" variant="success" label="Voltar do intervalo" salvando={salvando} onAcionar={acionar} />
+          )}
+        </div>
 
         <input
           ref={inputRef}
@@ -156,22 +165,21 @@ export default function BaterPontoView() {
           style={{ display: 'none' }}
         />
 
-        <button
-          onClick={() => registrar(proximoTipo, null)}
-          disabled={salvando}
+        <label
           style={{
-            display: 'block',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 6,
             margin: '12px auto 0',
-            background: 'none',
-            border: 'none',
             color: TOKENS.muted,
             fontSize: 12,
-            textDecoration: 'underline',
             cursor: 'pointer',
           }}
         >
+          <input type="checkbox" checked={semFoto} onChange={(e) => setSemFoto(e.target.checked)} />
           registrar sem foto
-        </button>
+        </label>
 
         {mensagem && (
           <div
@@ -236,12 +244,12 @@ export default function BaterPontoView() {
                           fontSize: 18,
                         }}
                       >
-                        {r.tipo === 'entrada' ? '↪' : '↩'}
+                        {CHIP_COR[r.tipo] === 'green' ? '↪' : '↩'}
                       </div>
                     )}
                     <div style={{ flex: 1 }}>
-                      <Chip color={r.tipo === 'entrada' ? 'green' : 'red'} size="xs">
-                        {r.tipo === 'entrada' ? 'Entrada' : 'Saída'}
+                      <Chip color={CHIP_COR[r.tipo]} size="xs">
+                        {TIPO_LABELS[r.tipo]}
                       </Chip>
                       <div style={{ fontSize: 16, fontWeight: 700, color: TOKENS.ink, marginTop: 4 }}>
                         {r.hora}
@@ -260,5 +268,37 @@ export default function BaterPontoView() {
         </div>
       </div>
     </div>
+  );
+}
+
+function BotaoPonto({
+  tipo,
+  variant,
+  label,
+  salvando,
+  onAcionar,
+}: {
+  tipo: TipoRegistro;
+  variant: 'success' | 'danger' | 'accent';
+  label: string;
+  salvando: boolean;
+  onAcionar: (tipo: TipoRegistro) => void;
+}) {
+  return (
+    <Btn
+      variant={variant}
+      size="lg"
+      disabled={salvando}
+      onClick={() => onAcionar(tipo)}
+      style={{
+        width: '100%',
+        justifyContent: 'center',
+        fontSize: 17,
+        padding: '18px',
+        borderRadius: 14,
+      }}
+    >
+      {salvando ? 'Registrando…' : `📸 ${label}`}
+    </Btn>
   );
 }

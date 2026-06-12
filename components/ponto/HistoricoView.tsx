@@ -9,7 +9,15 @@ import {
 } from '@/lib/ponto-logic';
 import { TOKENS } from '@/lib/tokens';
 import { Card, Chip } from '@/components/ui';
-import type { RegistroPonto } from '@/types/ponto';
+import { TIPO_LABELS } from '@/types/ponto';
+import type { RegistroPonto, TipoRegistro } from '@/types/ponto';
+
+const COR_TIPO: Record<TipoRegistro, { fg: string; bg: string; icone: string }> = {
+  entrada: { fg: '#059669', bg: TOKENS.greenSoft, icone: '↪' },
+  saida: { fg: '#dc2626', bg: TOKENS.redSoft, icone: '↩' },
+  inicio_intervalo: { fg: '#d97706', bg: TOKENS.amberSoft, icone: '☕' },
+  fim_intervalo: { fg: '#2563eb', bg: TOKENS.blueSoft, icone: '↪' },
+};
 
 interface HistoricoViewProps {
   registros: RegistroPonto[];
@@ -111,16 +119,17 @@ export default function HistoricoView({ registros, titulo = 'Meu histórico' }: 
                 {d.regs.map((r) => (
                   <span
                     key={r.id}
+                    title={TIPO_LABELS[r.tipo]}
                     style={{
                       fontSize: 12,
-                      color: r.tipo === 'entrada' ? '#059669' : '#dc2626',
-                      background: r.tipo === 'entrada' ? TOKENS.greenSoft : TOKENS.redSoft,
+                      color: COR_TIPO[r.tipo].fg,
+                      background: COR_TIPO[r.tipo].bg,
                       borderRadius: 6,
                       padding: '2px 8px',
                       fontWeight: 600,
                     }}
                   >
-                    {r.tipo === 'entrada' ? '↪' : '↩'} {r.hora}
+                    {COR_TIPO[r.tipo].icone} {r.hora}
                   </span>
                 ))}
               </div>

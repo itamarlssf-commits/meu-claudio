@@ -19,9 +19,18 @@ import {
 import { TOKENS } from '@/lib/tokens';
 import { inputBase } from '@/lib/input-styles';
 import { Card, Btn, Chip, Modal, Field, SectionHeader, KPI } from '@/components/ui';
-import type { Funcionaria, RegistroPonto } from '@/types/ponto';
+import { TIPO_LABELS } from '@/types/ponto';
+import type { Funcionaria, RegistroPonto, TipoRegistro } from '@/types/ponto';
 
 type Aba = 'registros' | 'funcionarias' | 'relatorio';
+
+type ChipColor = 'green' | 'red' | 'amber' | 'blue';
+const CHIP_COR: Record<TipoRegistro, ChipColor> = {
+  entrada: 'green',
+  saida: 'red',
+  inicio_intervalo: 'amber',
+  fim_intervalo: 'blue',
+};
 
 export default function AdminView() {
   const usuario = usePontoStore((s) => s.usuario);
@@ -242,13 +251,13 @@ function AbaRegistros({
                           justifyContent: 'center',
                         }}
                       >
-                        {r.tipo === 'entrada' ? '↪' : '↩'}
+                        {CHIP_COR[r.tipo] === 'green' ? '↪' : CHIP_COR[r.tipo] === 'amber' ? '☕' : '↩'}
                       </div>
                     )}
                     <div style={{ flex: 1 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <Chip color={r.tipo === 'entrada' ? 'green' : 'red'} size="xs">
-                          {r.tipo === 'entrada' ? 'Entrada' : 'Saída'}
+                        <Chip color={CHIP_COR[r.tipo]} size="xs">
+                          {TIPO_LABELS[r.tipo]}
                         </Chip>
                         <strong style={{ fontSize: 15 }}>{r.hora}</strong>
                         {r.editadoPor && (
@@ -330,8 +339,11 @@ function ModalEditarRegistro({
             onChange={(e) => setTipo(e.target.value as RegistroPonto['tipo'])}
             style={inputBase}
           >
-            <option value="entrada">Entrada</option>
-            <option value="saida">Saída</option>
+            {(Object.keys(TIPO_LABELS) as TipoRegistro[]).map((t) => (
+              <option key={t} value={t}>
+                {TIPO_LABELS[t]}
+              </option>
+            ))}
           </select>
         </Field>
         <div style={{ display: 'flex', gap: 10 }}>
