@@ -17,12 +17,20 @@ export function novoId(): string {
  * (separados por vírgula). Permite o "primeiro admin" sem precisar criar
  * o doc em ponto_usuarios manualmente.
  */
+/**
+ * Admins padrão (fallback quando a env não está definida no ambiente, ex.:
+ * preview da Vercel sem env var configurada). Pode ser estendido por
+ * NEXT_PUBLIC_PONTO_ADMIN_EMAILS (separado por vírgula).
+ */
+const ADMINS_PADRAO = ['itamarlssf@gmail.com'];
+
 export function emailEhAdmin(email: string | null | undefined): boolean {
   if (!email) return false;
-  const lista = (process.env.NEXT_PUBLIC_PONTO_ADMIN_EMAILS ?? '')
+  const daEnv = (process.env.NEXT_PUBLIC_PONTO_ADMIN_EMAILS ?? '')
     .split(',')
     .map((e) => e.trim().toLowerCase())
     .filter(Boolean);
+  const lista = [...ADMINS_PADRAO.map((e) => e.toLowerCase()), ...daEnv];
   return lista.includes(email.toLowerCase());
 }
 
