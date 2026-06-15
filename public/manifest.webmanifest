@@ -1,0 +1,19 @@
+{
+  "name": "Plantão Obstétrico",
+  "short_name": "Plantão",
+  "description": "Ferramentas de bolso para o plantão obstétrico — IG/DPP, peso fetal, Doppler e estadiamento de RCF. Funciona offline.",
+  "lang": "pt-BR",
+  "start_url": "/plantao",
+  "scope": "/plantao",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#08313B",
+  "theme_color": "#0E4B5A",
+  "categories": ["medical", "health", "productivity"],
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
