@@ -1,6 +1,10 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
+import { num, fmt, daysToWD } from './data/stats';
+import { type FetalSex, type GrowthClass } from './data/types';
+import { EFW_REFERENCES, BARCELONA_CALC_URL } from './data/efw';
+import { hadlockEfwFromBiometry } from './data/efw/hadlockFormula';
 
 /* =========================================================================
    PLANTÃO OBSTÉTRICO — ferramentas de bolso
@@ -28,38 +32,8 @@ const C = {
   sub: '#5A6E72',
 };
 
-// ---------- helpers numéricos ----------
-const num = (v: string | number | null | undefined): number =>
-  v === '' || v === null || v === undefined ? NaN : Number(v);
-
-const fmt = (v: number, d = 0): string =>
-  Number.isFinite(v)
-    ? v.toLocaleString('pt-BR', { maximumFractionDigits: d, minimumFractionDigits: d })
-    : '—';
-
-// erf p/ percentil normal (Abramowitz & Stegun 7.1.26)
-function erf(x: number): number {
-  const s = x < 0 ? -1 : 1;
-  x = Math.abs(x);
-  const t = 1 / (1 + 0.3275911 * x);
-  const y =
-    1 -
-    ((((1.061405429 * t - 1.453152027) * t + 1.421413741) * t - 0.284496736) * t + 0.254829592) *
-      t *
-      Math.exp(-x * x);
-  return s * y;
-}
-const normCdf = (z: number): number => 0.5 * (1 + erf(z / Math.SQRT2));
-
-const daysToWD = (d: number): string => {
-  if (!Number.isFinite(d) || d < 0) return '—';
-  const w = Math.floor(d / 7);
-  const dd = Math.round(d % 7);
-  return `${w}s ${dd}d`;
-};
+// ---------- helpers de data (timezone-safe, sempre horário LOCAL) ----------
 const addDays = (date: Date, days: number): Date => new Date(date.getTime() + days * 86400000);
-
-// datas timezone-safe: parsing e serialização sempre em horário LOCAL
 const toISO = (date: Date): string => {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, '0');
@@ -68,29 +42,8 @@ const toISO = (date: Date): string => {
 };
 const parseDate = (s: string): Date | null => (s ? new Date(s + 'T00:00:00') : null);
 const diffDays = (a: Date, b: Date): number => Math.round((a.getTime() - b.getTime()) / 86400000);
-
 const fmtDateBR = (date: Date): string =>
   date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-
-// ---------- tabela mediana Hadlock 1991 (g) por semana ----------
-const HADLOCK_P50: Record<number, number> = {
-  10: 35, 11: 45, 12: 58, 13: 73, 14: 93, 15: 117, 16: 146, 17: 181, 18: 223,
-  19: 273, 20: 331, 21: 399, 22: 478, 23: 568, 24: 670, 25: 785, 26: 913,
-  27: 1055, 28: 1210, 29: 1379, 30: 1559, 31: 1751, 32: 1953, 33: 2162,
-  34: 2377, 35: 2595, 36: 2813, 37: 3028, 38: 3236, 39: 3435, 40: 3619,
-};
-const hadlockMedian = (gaWeeksFloat: number): number => {
-  const w = Math.max(10, Math.min(40, gaWeeksFloat));
-  const lo = Math.floor(w);
-  const hi = Math.min(40, lo + 1);
-  const a = HADLOCK_P50[lo];
-  const b = HADLOCK_P50[hi];
-  if (a == null) return NaN;
-  if (b == null || hi === lo) return a;
-  return a + (b - a) * (w - lo);
-};
-const CV = 0.125; // coeficiente de variação aproximado (Hadlock)
-const SIGMA_LOG = Math.sqrt(Math.log(1 + CV * CV)); // ≈ 0.1244 — desvio na escala log
 
 // =========================================================================
 type TabId = 'ig' | 'peso' | 'dop' | 'rcf' | 'met';
@@ -100,6 +53,8 @@ export default function PlantaoPage() {
   // IG compartilhada (em dias) p/ peso e estadiamento — calculada na aba IG
   const [gaDays, setGaDays] = useState<number>(NaN);
   const [gaSource, setGaSource] = useState<string>('');
+  // sexo fetal compartilhado (usado nas curvas sexo-específicas)
+  const [sex, setSex] = useState<FetalSex>('unknown');
 
   const tabs: { id: TabId; label: string }[] = [
     { id: 'ig', label: 'IG / DPP' },
@@ -130,7 +85,7 @@ export default function PlantaoPage() {
 
       <main style={S.main}>
         {tab === 'ig' && <TabIG setGaDays={setGaDays} setGaSource={setGaSource} />}
-        {tab === 'peso' && <TabPeso gaDays={gaDays} />}
+        {tab === 'peso' && <TabPeso gaDays={gaDays} sex={sex} setSex={setSex} />}
         {tab === 'dop' && <TabDoppler />}
         {tab === 'rcf' && <TabRCF />}
         {tab === 'met' && <TabMetodos />}
@@ -281,9 +236,34 @@ function TabIG({
 }
 
 // =========================================================================
-// ABA 2 — Peso fetal (Hadlock)
+// ABA 2 — Peso fetal: percentil em múltiplas referências
 // =========================================================================
-function TabPeso({ gaDays }: { gaDays: number }) {
+const SEX_OPTS = [
+  { id: 'unknown', label: 'Não inf.' },
+  { id: 'male', label: 'Masc.' },
+  { id: 'female', label: 'Fem.' },
+];
+
+const toneColor = (t: ToneOrEmpty): string =>
+  t === 'good' ? C.good : t === 'warn' ? C.warn : t === 'high' ? C.high : C.ink;
+
+const classToTone = (c: GrowthClass): ToneOrEmpty =>
+  c === 'severe-sga' ? 'high' : c === 'sga' || c === 'lga' ? 'warn' : 'good';
+
+const classLabel = (c: GrowthClass): string =>
+  c === 'severe-sga' ? '< p3' : c === 'sga' ? 'p3–p10' : c === 'lga' ? '> p90' : 'AIG';
+
+function TabPeso({
+  gaDays,
+  sex,
+  setSex,
+}: {
+  gaDays: number;
+  sex: FetalSex;
+  setSex: (s: FetalSex) => void;
+}) {
+  const [mode, setMode] = useState<'peso' | 'bio'>('peso');
+  const [directW, setDirectW] = useState('');
   const [bpd, setBpd] = useState('');
   const [hc, setHc] = useState('');
   const [ac, setAc] = useState('');
@@ -295,75 +275,107 @@ function TabPeso({ gaDays }: { gaDays: number }) {
   const k = unit === 'mm' ? 0.1 : 1; // converte p/ cm (Hadlock exige cm)
 
   const efw = useMemo(() => {
-    const BPD = num(bpd) * k;
-    const HC = num(hc) * k;
-    const AC = num(ac) * k;
-    const FL = num(fl) * k;
-    if (![BPD, HC, AC, FL].every(Number.isFinite)) return NaN;
-    const log10 =
-      1.3596 - 0.00386 * AC * FL + 0.0064 * HC + 0.00061 * BPD * AC + 0.0424 * AC + 0.174 * FL;
-    return Math.pow(10, log10);
-  }, [bpd, hc, ac, fl, k]);
+    if (mode === 'peso') return num(directW);
+    return hadlockEfwFromBiometry(num(bpd) * k, num(hc) * k, num(ac) * k, num(fl) * k);
+  }, [mode, directW, bpd, hc, ac, fl, k]);
 
-  // IG usada: manual se preenchida, senão a global
+  // IG usada: manual se preenchida, senão a da aba IG
   const gaUsedDays = useMemo(() => {
     const w = num(manualW);
     if (Number.isFinite(w)) return w * 7 + (Number.isFinite(num(manualD)) ? num(manualD) : 0);
     return gaDays;
   }, [manualW, manualD, gaDays]);
 
-  const pct = useMemo(() => {
-    if (!Number.isFinite(efw) || !Number.isFinite(gaUsedDays)) return null;
-    const med = hadlockMedian(gaUsedDays / 7);
-    if (!Number.isFinite(med)) return null;
-    // percentil na escala log (peso fetal é log-normal)
-    const z = (Math.log(efw) - Math.log(med)) / SIGMA_LOG;
-    const p = normCdf(z) * 100;
-    return { med, p, ratio: (efw / med) * 100 };
-  }, [efw, gaUsedDays]);
-
-  const pctTone: ToneOrEmpty =
-    pct == null ? '' : pct.p < 3 ? 'high' : pct.p < 10 ? 'warn' : pct.p > 90 ? 'warn' : 'good';
+  const results = useMemo(
+    () => EFW_REFERENCES.map((ref) => ({ ref, res: ref.percentile(efw, gaUsedDays, sex) })),
+    [efw, gaUsedDays, sex]
+  );
 
   return (
     <div>
-      <Card>
-        <SegRow
-          value={unit}
-          onChange={(v) => setUnit(v as typeof unit)}
-          opts={[
-            { id: 'mm', label: 'mm' },
-            { id: 'cm', label: 'cm' },
-          ]}
-          tight
-        />
-        <Row>
-          <Field label={`DBP (${unit})`}>
-            <input type="number" inputMode="decimal" value={bpd} onChange={(e) => setBpd(e.target.value)} style={S.input} />
-          </Field>
-          <Field label={`CC / HC (${unit})`}>
-            <input type="number" inputMode="decimal" value={hc} onChange={(e) => setHc(e.target.value)} style={S.input} />
-          </Field>
-        </Row>
-        <Row>
-          <Field label={`CA / AC (${unit})`}>
-            <input type="number" inputMode="decimal" value={ac} onChange={(e) => setAc(e.target.value)} style={S.input} />
-          </Field>
-          <Field label={`CF / FL (${unit})`}>
-            <input type="number" inputMode="decimal" value={fl} onChange={(e) => setFl(e.target.value)} style={S.input} />
-          </Field>
-        </Row>
-      </Card>
+      <SegRow
+        value={mode}
+        onChange={(v) => setMode(v as typeof mode)}
+        opts={[
+          { id: 'peso', label: 'Peso direto' },
+          { id: 'bio', label: 'Por biometria' },
+        ]}
+      />
 
-      <div style={S.resultGrid}>
-        <Stat big label="Peso fetal estimado" value={Number.isFinite(efw) ? `${fmt(efw)} g` : '—'} sub="Hadlock 4 parâmetros" />
-        {pct && (
+      <Card>
+        {mode === 'peso' ? (
+          <Field label="Peso fetal estimado (g)">
+            <input type="number" inputMode="numeric" value={directW} onChange={(e) => setDirectW(e.target.value)} style={S.input} placeholder="ex. 2500" />
+          </Field>
+        ) : (
           <>
-            <Stat label="Percentil (aprox.)" value={`p${fmt(pct.p)}`} tone={pctTone} />
-            <Stat label="% da mediana" value={`${fmt(pct.ratio)}%`} />
-            <Stat label="Mediana p/ IG" value={`${fmt(pct.med)} g`} small />
+            <SegRow
+              value={unit}
+              onChange={(v) => setUnit(v as typeof unit)}
+              opts={[
+                { id: 'mm', label: 'mm' },
+                { id: 'cm', label: 'cm' },
+              ]}
+              tight
+            />
+            <Row>
+              <Field label={`DBP (${unit})`}>
+                <input type="number" inputMode="decimal" value={bpd} onChange={(e) => setBpd(e.target.value)} style={S.input} />
+              </Field>
+              <Field label={`CC / HC (${unit})`}>
+                <input type="number" inputMode="decimal" value={hc} onChange={(e) => setHc(e.target.value)} style={S.input} />
+              </Field>
+            </Row>
+            <Row>
+              <Field label={`CA / AC (${unit})`}>
+                <input type="number" inputMode="decimal" value={ac} onChange={(e) => setAc(e.target.value)} style={S.input} />
+              </Field>
+              <Field label={`CF / FL (${unit})`}>
+                <input type="number" inputMode="decimal" value={fl} onChange={(e) => setFl(e.target.value)} style={S.input} />
+              </Field>
+            </Row>
           </>
         )}
+      </Card>
+
+      <Card>
+        <div style={S.cardLabel}>Sexo fetal</div>
+        <SegRow value={sex} onChange={(v) => setSex(v as FetalSex)} opts={SEX_OPTS} tight />
+        <div style={S.subtle}>
+          Só altera o percentil em curvas sexo-específicas (Barcelona). Hadlock e FMF são populacionais.
+        </div>
+      </Card>
+
+      <Stat
+        big
+        label="Peso fetal estimado"
+        value={Number.isFinite(efw) ? `${fmt(efw)} g` : '—'}
+        sub={mode === 'bio' ? 'Hadlock 4 parâmetros' : 'inserido manualmente'}
+      />
+
+      <div style={S.refGrid}>
+        {results.map(({ ref, res }) => (
+          <div key={ref.id} style={S.refCard}>
+            <div style={S.refName}>{ref.shortLabel}</div>
+            {res ? (
+              <>
+                <div style={{ ...S.refP, color: toneColor(classToTone(res.classification)) }}>p{fmt(res.p)}</div>
+                <div style={S.refClass}>{classLabel(res.classification)}</div>
+                {res.median != null && Number.isFinite(efw) && (
+                  <div style={S.refMed}>{fmt((efw / res.median) * 100)}% da mediana</div>
+                )}
+              </>
+            ) : (
+              <div style={S.refNa}>fora de faixa</div>
+            )}
+          </div>
+        ))}
+
+        <a href={BARCELONA_CALC_URL} target="_blank" rel="noopener noreferrer" style={S.refCardLink}>
+          <div style={S.refName}>Barcelona</div>
+          <div style={S.refLinkText}>abrir calculadora ↗</div>
+          <div style={S.refMed}>customizada (Figueras) · usa dados maternos</div>
+        </a>
       </div>
 
       {!Number.isFinite(gaUsedDays) && Number.isFinite(efw) && (
@@ -387,8 +399,9 @@ function TabPeso({ gaDays }: { gaDays: number }) {
       </Card>
 
       <Note>
-        Percentil por aproximação log-normal sobre a mediana de Hadlock (1991), CV {Math.round(CV * 1000) / 10}%.
-        Curvas INTERGROWTH-21st e Barcelona exigem tabelas próprias — ver Métodos.
+        Mesmo peso comparado em referências distintas. Hadlock 1991 e FMF (Nicolaides 2018) são
+        populacionais e calculados aqui; a Barcelona (Figueras customizada) depende de dados maternos
+        e abre na calculadora oficial. Percentil de Hadlock por aproximação log-normal. Ver Métodos.
       </Note>
     </div>
   );
@@ -694,9 +707,19 @@ function TabMetodos() {
           cite="Hadlock FP et al. Am J Obstet Gynecol. 1985;151(3):333–337."
         />
         <Method
-          title="Percentil (aproximação log-normal)"
-          body={`Sobre a mediana de Hadlock 1991, percentil = Φ((ln PFE − ln mediana) / σ), com σ = √(ln(1+CV²)) ≈ 0,124 para CV = 12,5%. Cálculo na escala log porque o peso fetal é log-normal. O CV não é constante ao longo da gestação — é uma aproximação. Para uso formal, prefira curvas com modelo de dispersão próprio (INTERGROWTH-21st, OMS).`}
-          cite="Hadlock FP et al. Radiology. 1991;181(1):129–133. INTERGROWTH-21st: Stirnemann J et al. UOG 2017/2020."
+          title="Percentil — Hadlock 1991 (aproximação log-normal)"
+          body={`Sobre a mediana de Hadlock 1991, percentil = Φ((ln PFE − ln mediana) / σ), com σ = √(ln(1+CV²)) ≈ 0,124 para CV = 12,5%. Cálculo na escala log porque o peso fetal é log-normal. O CV não é constante ao longo da gestação — é uma aproximação. Não é sexo-específica.`}
+          cite="Hadlock FP et al. Radiology. 1991;181(1):129–133."
+        />
+        <Method
+          title="Percentil — FMF 2018 (Nicolaides)"
+          body="Carta de peso fetal populacional. PFE estimado por Hadlock; percentil pela distribuição log10-gaussiana da FMF: média de log10(PFE) por polinômio cúbico na IG e DP linear na IG (20 a <43 sem). Equação conferida contra a implementação open-source FetalGPSR e por âncoras fisiológicas (mediana ≈ 321 g a 20 sem, ≈ 3459 g a 40 sem). Não é sexo-específica."
+          cite="Nicolaides KH et al. Ultrasound Obstet Gynecol. 2018;52(1):44–51."
+        />
+        <Method
+          title="Percentil — Barcelona (Figueras customizada)"
+          body="Padrão customizado (peso/altura maternos, paridade, etnia + sexo fetal). Por depender de coeficientes não disponíveis offline e do modelo proprietário, o app não o reproduz internamente: abre a calculadora oficial fetalmedicinebarcelona.org/calc para conferência."
+          cite="Figueras F et al. Eur J Obstet Gynecol Reprod Biol. 2008;136(1):20–24."
         />
       </Card>
 
@@ -974,6 +997,44 @@ const S = {
     gridTemplateColumns: 'repeat(2, 1fr)',
     gap: 10,
   },
+  refGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(2, 1fr)',
+    gap: 10,
+    marginTop: 10,
+  },
+  refCard: {
+    background: C.white,
+    border: `1px solid ${C.line}`,
+    borderRadius: 12,
+    padding: 14,
+    textAlign: 'center',
+  },
+  refName: {
+    fontSize: 11,
+    fontWeight: 700,
+    textTransform: 'uppercase',
+    letterSpacing: '0.04em',
+    color: C.teal,
+    marginBottom: 6,
+  },
+  refP: { fontSize: 23, fontWeight: 700, lineHeight: 1.1 },
+  refClass: { fontSize: 12.5, fontWeight: 600, color: C.sub, marginTop: 2 },
+  refMed: { fontSize: 11, color: C.sub, marginTop: 4, lineHeight: 1.35 },
+  refNa: { fontSize: 13, color: C.sub, padding: '10px 0' },
+  refCardLink: {
+    gridColumn: '1 / -1',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    background: C.mist,
+    border: `1px solid ${C.line}`,
+    borderRadius: 12,
+    padding: 14,
+    textDecoration: 'none',
+    color: C.petrol,
+  },
+  refLinkText: { fontSize: 15, fontWeight: 700, marginTop: 2 },
   stat: {
     background: C.white,
     border: `1px solid ${C.line}`,
