@@ -20,13 +20,30 @@ import { getStorage, type FirebaseStorage } from 'firebase/storage';
 import type { AppData } from '@/types/paciente';
 import type { Lead } from '@/types/lead';
 
+// Config pública do app web do Firebase. Estes valores NÃO são segredos —
+// já são embutidos no bundle do cliente e a segurança é feita pelas Regras do
+// Firestore/Storage. Por isso usamos um fallback fixo: se as envs
+// NEXT_PUBLIC_FIREBASE_* não estiverem definidas (ex.: ambiente de Preview da
+// Vercel sem variáveis), o app continua funcionando em vez de travar na tela
+// "Carregando…". As envs, quando presentes, têm prioridade.
+const FIREBASE_FALLBACK = {
+  apiKey: 'AIzaSyAi0ONd5v_6O4B-HawP9avuC-eqHw1RM7s',
+  authDomain: 'financeiro-pacientes.firebaseapp.com',
+  projectId: 'financeiro-pacientes',
+  storageBucket: 'financeiro-pacientes.firebasestorage.app',
+  messagingSenderId: '1014848958468',
+  appId: '1:1014848958468:web:c5963e5db6bdcb6c1d0551',
+};
+
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || FIREBASE_FALLBACK.apiKey,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || FIREBASE_FALLBACK.authDomain,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || FIREBASE_FALLBACK.projectId,
+  storageBucket:
+    process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || FIREBASE_FALLBACK.storageBucket,
+  messagingSenderId:
+    process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || FIREBASE_FALLBACK.messagingSenderId,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || FIREBASE_FALLBACK.appId,
 };
 
 export const firebaseConfigValues = firebaseConfig;

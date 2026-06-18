@@ -23,7 +23,7 @@ Aplicativo em **Next.js 14 + TypeScript + Tailwind + Firebase** com duas áreas:
    - Consultório: http://localhost:3000
    - Ponto: http://localhost:3000/ponto
 
-> Sem as variáveis `NEXT_PUBLIC_FIREBASE_*` o app não consegue inicializar o Firebase e fica preso na tela "Carregando…". Na Vercel, marque essas variáveis para **todos os ambientes** (Production, Preview e Development).
+> As variáveis `NEXT_PUBLIC_FIREBASE_*` são **opcionais**: o código já traz um *fallback* com a config pública do projeto (`lib/firebase.ts`), então o app funciona em qualquer ambiente da Vercel mesmo sem configurá-las. Para apontar para **outro** projeto Firebase, defina essas variáveis (elas têm prioridade sobre o fallback) em todos os ambientes (Production, Preview e Development).
 
 ## Scripts
 
