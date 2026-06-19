@@ -5,6 +5,15 @@ import { num, fmt, daysToWD } from './data/stats';
 import { type FetalSex, type GrowthClass } from './data/types';
 import { EFW_REFERENCES, BARCELONA_CALC_URL } from './data/efw';
 import { hadlockEfwFromBiometry } from './data/efw/hadlockFormula';
+import { PI_UA, PI_MCA, PI_CPR, PI_UTA, deriveStageFlags, type DopplerPercentile } from './data/doppler';
+
+// inputs de Doppler compartilhados entre as abas Doppler e RCF
+interface DopplerInputs {
+  uaPI: string;
+  mcaPI: string;
+  utaR: string;
+  utaL: string;
+}
 
 /* =========================================================================
    PLANTÃO OBSTÉTRICO — ferramentas de bolso
@@ -55,6 +64,9 @@ export default function PlantaoPage() {
   const [gaSource, setGaSource] = useState<string>('');
   // sexo fetal compartilhado (usado nas curvas sexo-específicas)
   const [sex, setSex] = useState<FetalSex>('unknown');
+  // Doppler compartilhado (em dias) — a aba é desmontada ao trocar, então o
+  // estado vive aqui para alimentar o estadiamento automático da RCF.
+  const [dop, setDop] = useState<DopplerInputs>({ uaPI: '', mcaPI: '', utaR: '', utaL: '' });
 
   const tabs: { id: TabId; label: string }[] = [
     { id: 'ig', label: 'IG / DPP' },
@@ -86,8 +98,8 @@ export default function PlantaoPage() {
       <main style={S.main}>
         {tab === 'ig' && <TabIG setGaDays={setGaDays} setGaSource={setGaSource} />}
         {tab === 'peso' && <TabPeso gaDays={gaDays} sex={sex} setSex={setSex} />}
-        {tab === 'dop' && <TabDoppler />}
-        {tab === 'rcf' && <TabRCF />}
+        {tab === 'dop' && <TabDoppler gaDays={gaDays} dop={dop} setDop={setDop} />}
+        {tab === 'rcf' && <TabRCF gaDays={gaDays} dop={dop} />}
         {tab === 'met' && <TabMetodos />}
       </main>
 
@@ -410,11 +422,34 @@ function TabPeso({
 // =========================================================================
 // ABA 3 — Doppler
 // =========================================================================
-function TabDoppler() {
-  const [uaPI, setUaPI] = useState('');
-  const [mcaPI, setMcaPI] = useState('');
-  const [utaR, setUtaR] = useState('');
-  const [utaL, setUtaL] = useState('');
+// formata o percentil como "p__" com cor por gravidade
+function pctTone(pct: DopplerPercentile): ToneOrEmpty {
+  return pct.abnormal ? 'high' : pct.p < 10 || pct.p > 90 ? 'warn' : 'good';
+}
+function PctTag({ pct }: { pct: DopplerPercentile | null }) {
+  if (!pct) return <span style={{ ...S.dopPct, color: C.sub, background: C.mist }}>—</span>;
+  const tone = pctTone(pct);
+  const col = tone === 'high' ? C.high : tone === 'warn' ? C.warn : C.good;
+  const bg = tone === 'high' ? '#F3D2CF' : tone === 'warn' ? C.amberSoft : C.goodSoft;
+  return (
+    <span style={{ ...S.dopPct, color: col, background: bg }}>
+      p{pct.p < 1 ? '<1' : pct.p > 99 ? '>99' : pct.p.toFixed(0)}
+      {pct.approximate ? '*' : ''}
+    </span>
+  );
+}
+
+function TabDoppler({
+  gaDays,
+  dop,
+  setDop,
+}: {
+  gaDays: number;
+  dop: DopplerInputs;
+  setDop: (d: DopplerInputs) => void;
+}) {
+  const { uaPI, mcaPI, utaR, utaL } = dop;
+  const upd = (patch: Partial<DopplerInputs>) => setDop({ ...dop, ...patch });
 
   const cpr = useMemo(() => {
     const a = num(mcaPI);
@@ -429,38 +464,78 @@ function TabDoppler() {
     return xs.length ? xs.reduce((s, x) => s + x, 0) / xs.length : NaN;
   }, [utaR, utaL]);
 
+  const hasGa = Number.isFinite(gaDays);
+  const uaP = hasGa ? PI_UA.percentile(num(uaPI), gaDays) : null;
+  const mcaP = hasGa ? PI_MCA.percentile(num(mcaPI), gaDays) : null;
+  const cprP = hasGa ? PI_CPR.percentile(cpr, gaDays) : null;
+  const utaP = hasGa ? PI_UTA.percentile(utaMean, gaDays) : null;
+
   return (
     <div>
+      {!hasGa && <Note tone="warn">Defina a IG na aba IG/DPP para calcular os percentis automaticamente.</Note>}
+
       <Card>
         <div style={S.cardLabel}>Índices de pulsatilidade (IP)</div>
         <Row>
           <Field label="Art. umbilical (AU)">
-            <input type="number" inputMode="decimal" value={uaPI} onChange={(e) => setUaPI(e.target.value)} style={S.input} placeholder="IP" />
+            <input type="number" inputMode="decimal" value={uaPI} onChange={(e) => upd({ uaPI: e.target.value })} style={S.input} placeholder="IP" />
           </Field>
           <Field label="Art. cerebral média (ACM)">
-            <input type="number" inputMode="decimal" value={mcaPI} onChange={(e) => setMcaPI(e.target.value)} style={S.input} placeholder="IP" />
+            <input type="number" inputMode="decimal" value={mcaPI} onChange={(e) => upd({ mcaPI: e.target.value })} style={S.input} placeholder="IP" />
           </Field>
         </Row>
         <Row>
           <Field label="Art. uterina D">
-            <input type="number" inputMode="decimal" value={utaR} onChange={(e) => setUtaR(e.target.value)} style={S.input} placeholder="IP" />
+            <input type="number" inputMode="decimal" value={utaR} onChange={(e) => upd({ utaR: e.target.value })} style={S.input} placeholder="IP" />
           </Field>
           <Field label="Art. uterina E">
-            <input type="number" inputMode="decimal" value={utaL} onChange={(e) => setUtaL(e.target.value)} style={S.input} placeholder="IP" />
+            <input type="number" inputMode="decimal" value={utaL} onChange={(e) => upd({ utaL: e.target.value })} style={S.input} placeholder="IP" />
           </Field>
         </Row>
+      </Card>
+
+      <Card>
+        <div style={S.cardLabel}>Percentil por IG (automático)</div>
+        <DopRow label="IP AU" value={Number.isFinite(num(uaPI)) ? fmt(num(uaPI), 2) : '—'} pct={uaP} hint="anormal > p95" />
+        <DopRow label="IP ACM" value={Number.isFinite(num(mcaPI)) ? fmt(num(mcaPI), 2) : '—'} pct={mcaP} hint="anormal < p5" />
+        <DopRow label="RCP (ACM/AU)" value={Number.isFinite(cpr) ? fmt(cpr, 2) : '—'} pct={cprP} hint="anormal < p5" />
+        <DopRow label="IP uterino médio" value={Number.isFinite(utaMean) ? fmt(utaMean, 2) : '—'} pct={utaP} hint="anormal > p95" />
       </Card>
 
       <div style={S.resultGrid}>
         <Stat big label="RCP (ACM / AU)" value={Number.isFinite(cpr) ? fmt(cpr, 2) : '—'} sub="razão cerebroplacentária" />
         <Stat label="RUC (AU / ACM)" value={Number.isFinite(ucr) ? fmt(ucr, 2) : '—'} />
-        <Stat label="IP uterina médio" value={Number.isFinite(utaMean) ? fmt(utaMean, 2) : '—'} />
       </div>
 
       <Note>
-        Cálculos exatos (sem tabela). RCP/RUC e IP médio prontos. Para classificar percentil (p5/p95) por IG,
-        use os limiares na aba RCF — assim funciona o protocolo de estadiamento.
+        Percentis: AU, ACM e RCP por Ciobanu 2019 (FMF); uterinas por Gómez 2008 (DP aproximado, marcado com *).
+        Os limiares alimentam automaticamente o estadiamento na aba RCF.
       </Note>
+    </div>
+  );
+}
+
+function DopRow({
+  label,
+  value,
+  pct,
+  hint,
+}: {
+  label: string;
+  value: string;
+  pct: DopplerPercentile | null;
+  hint: string;
+}) {
+  return (
+    <div style={S.dopRow}>
+      <div>
+        <div style={S.dopRowLabel}>{label}</div>
+        <div style={S.dopRowHint}>{hint}</div>
+      </div>
+      <div style={S.dopRowRight}>
+        <span style={S.dopRowVal}>{value}</span>
+        <PctTag pct={pct} />
+      </div>
     </div>
   );
 }
@@ -529,13 +604,31 @@ const STAGE_DATA: Record<StageKey, StageInfo> = {
   },
 };
 
-function TabRCF() {
+function TabRCF({ gaDays, dop }: { gaDays: number; dop: DopplerInputs }) {
   const [efwClass, setEfwClass] = useState<'' | '>=p10' | 'p3-p10' | '<p3'>('');
-  // Doppler — limiares de estágio I
-  const [uaP95, setUaP95] = useState(false);
-  const [mcaP5, setMcaP5] = useState(false);
-  const [cprP5, setCprP5] = useState(false);
-  const [utaP95, setUtaP95] = useState(false);
+  // Doppler — limiares de estágio I. null = segue o automático (aba Doppler).
+  const [uaOv, setUaOv] = useState<boolean | null>(null);
+  const [mcaOv, setMcaOv] = useState<boolean | null>(null);
+  const [cprOv, setCprOv] = useState<boolean | null>(null);
+  const [utaOv, setUtaOv] = useState<boolean | null>(null);
+
+  // percentis derivados automaticamente do Doppler + IG
+  const auto = useMemo(() => {
+    if (!Number.isFinite(gaDays)) return {} as ReturnType<typeof deriveStageFlags>;
+    const ua = num(dop.uaPI);
+    const mca = num(dop.mcaPI);
+    const cprV = Number.isFinite(mca) && Number.isFinite(ua) && ua !== 0 ? mca / ua : NaN;
+    const r = num(dop.utaR);
+    const l = num(dop.utaL);
+    const xs = [r, l].filter(Number.isFinite);
+    const utaV = xs.length ? xs.reduce((s, x) => s + x, 0) / xs.length : NaN;
+    return deriveStageFlags({ ua, mca, cpr: cprV, uta: utaV }, gaDays);
+  }, [gaDays, dop]);
+
+  const uaP95 = uaOv ?? auto.uaP95 ?? false;
+  const mcaP5 = mcaOv ?? auto.mcaP5 ?? false;
+  const cprP5 = cprOv ?? auto.cprP5 ?? false;
+  const utaP95 = utaOv ?? auto.utaP95 ?? false;
   // AU diástole final
   const [edf, setEdf] = useState<'presente' | 'ausente' | 'reverso'>('presente');
   // Ducto venoso
@@ -594,10 +687,11 @@ function TabRCF() {
 
       <Card>
         <div style={S.cardLabel}>Doppler — limiares (estágio I)</div>
-        <Toggle on={uaP95} set={setUaP95} label="IP AU > p95" />
-        <Toggle on={mcaP5} set={setMcaP5} label="IP ACM < p5" />
-        <Toggle on={cprP5} set={setCprP5} label="RCP < p5" />
-        <Toggle on={utaP95} set={setUtaP95} label="IP uterina médio > p95" />
+        <AutoToggle label="IP AU > p95" on={uaP95} ov={uaOv} auto={auto.uaP95} set={setUaOv} />
+        <AutoToggle label="IP ACM < p5" on={mcaP5} ov={mcaOv} auto={auto.mcaP5} set={setMcaOv} />
+        <AutoToggle label="RCP < p5" on={cprP5} ov={cprOv} auto={auto.cprP5} set={setCprOv} />
+        <AutoToggle label="IP uterina médio > p95" on={utaP95} ov={utaOv} auto={auto.utaP95} set={setUtaOv} />
+        <div style={S.subtle}>Derivado automaticamente do Doppler quando há IG. Toque para sobrescrever.</div>
       </Card>
 
       <Card>
@@ -727,7 +821,17 @@ function TabMetodos() {
         <div style={S.cardLabel}>Doppler</div>
         <Method
           title="Razões"
-          body="RCP = IP ACM ÷ IP AU. RUC = IP AU ÷ IP ACM. IP uterino médio = média das artérias uterinas direita e esquerda. A classificação por percentil (p5/p95) por IG é feita na aba RCF."
+          body="RCP = IP ACM ÷ IP AU. RUC = IP AU ÷ IP ACM. IP uterino médio = média das artérias uterinas direita e esquerda."
+        />
+        <Method
+          title="Percentil — AU, ACM e RCP (Ciobanu 2019, FMF)"
+          body="Distribuição log10-gaussiana por IG. Mediana e DP (em log10) transcritos da Tabela 2 do artigo (centis 5/10/25/50/75/90/95, IG 20–41 sem); o DP é recuperado de (log10 p95 − log10 p5)/(2·1,6449) e a reconstrução de p10/p90 confere com a tabela (erro ≤ 0,0015). Percentil = Φ((log10 IP − log10 mediana)/DP). Identidade dos vasos validada por RCP = ACM/AU. AU/uterinas: anormal > p95; ACM/RCP: anormal < p5."
+          cite="Ciobanu A, Wright A, Syngelaki A, Wright D, Akolekar R, Nicolaides KH. Ultrasound Obstet Gynecol. 2019;53(4):465–472. DOI: 10.1002/uog.20157."
+        />
+        <Method
+          title="Percentil — artérias uterinas (Gómez 2008, Barcelona)"
+          body="Média: ln(IP) = 1,39 − 0,012·IG + 0,0000198·IG² (IG em dias). O DP em escala ln é uma APROXIMAÇÃO (marcada com *), derivada dos centis publicados (média e p95 em 11, 34 e 41 sem) por interpolação linear, na ausência da tabela de DP do artigo. Conferir antes de aplicar."
+          cite="Gómez O, Figueras F, Fernández S, Bennasar M, Martínez JM, Puerto B, Gratacós E. Ultrasound Obstet Gynecol. 2008;32(2):128–132. DOI: 10.1002/uog.5315."
         />
       </Card>
 
@@ -735,8 +839,8 @@ function TabMetodos() {
         <div style={S.cardLabel}>Estadiamento da RCF (Barcelona)</div>
         <Method
           title="Protocolo por estágios"
-          body="PIG: p3–p10 com Doppler normal — termo. Estágio I: PFE < p3, ou IP AU > p95, ou RCP < p5, ou IP ACM < p5, ou IP uterino médio > p95 — ~37 sem. Estágio II: diástole zero na AU — ~34 sem, cesárea. Estágio III: diástole reversa na AU, ou IP-DV > p95, ou onda a do DV ausente/reversa — ~30 sem, cesárea. Estágio IV: CTG anormal (desacelerações recorrentes ou STV < 3 ms) — a partir da viabilidade, cesárea em centro terciário."
-          cite="Figueras F, Gratacós E. Fetal Diagn Ther. 2014;36(2):86–98. ISUOG Practice Guidelines (Lees C et al.). UOG. 2020."
+          body="Os limiares de Doppler do estágio I (AU > p95, ACM < p5, RCP < p5, uterinas > p95) são derivados automaticamente da aba Doppler quando há IG, com sobrescrita manual. PIG: p3–p10 com Doppler normal — termo. Estágio I: PFE < p3, ou IP AU > p95, ou RCP < p5, ou IP ACM < p5, ou IP uterino médio > p95 — ~37 sem. Estágio II: diástole zero na AU — ~34 sem, cesárea. Estágio III: diástole reversa na AU, ou IP-DV > p95, ou onda a do DV ausente/reversa — ~30 sem, cesárea. Estágio IV: CTG anormal (desacelerações recorrentes ou STV < 3 ms) — a partir da viabilidade, cesárea em centro terciário. A sequência de deterioração (AU → ACM → istmo aórtico → ducto venoso) embasa a progressão dos estágios."
+          cite="Figueras F, Gratacós E. Fetal Diagn Ther. 2014;36(2):86–98. Figueras F et al. (sequência istmo aórtico/ducto venoso) Ultrasound Obstet Gynecol. 2009;33(1):39–43. DOI: 10.1002/uog.6278. ISUOG Practice Guidelines (Lees C et al.). UOG. 2020."
         />
       </Card>
 
@@ -825,6 +929,38 @@ function Toggle({ on, set, label }: { on: boolean; set: (v: boolean) => void; la
       <span style={{ ...S.toggleDot, ...(on ? S.toggleDotOn : {}) }} />
       <span>{label}</span>
     </button>
+  );
+}
+
+// toggle com valor automático (do Doppler) e sobrescrita manual.
+// ov === null → segue o automático; senão usa o valor manual.
+function AutoToggle({
+  label,
+  on,
+  ov,
+  auto,
+  set,
+}: {
+  label: string;
+  on: boolean;
+  ov: boolean | null;
+  auto: boolean | undefined;
+  set: (v: boolean | null) => void;
+}) {
+  const following = ov === null && auto !== undefined;
+  return (
+    <div style={S.autoToggle}>
+      <button onClick={() => set(!on)} style={{ ...S.toggle, flex: 1, ...(on ? S.toggleOn : {}) }}>
+        <span style={{ ...S.toggleDot, ...(on ? S.toggleDotOn : {}) }} />
+        <span>{label}</span>
+        {following && <span style={S.autoBadge}>auto</span>}
+      </button>
+      {ov !== null && (
+        <button onClick={() => set(null)} style={S.autoReset} title="Voltar ao automático">
+          auto
+        </button>
+      )}
+    </div>
   );
 }
 
@@ -992,6 +1128,50 @@ const S = {
     transition: 'all 0.15s',
   },
   toggleDotOn: { background: C.teal, borderColor: C.teal },
+  autoToggle: { display: 'flex', alignItems: 'stretch', gap: 6 },
+  autoBadge: {
+    marginLeft: 'auto',
+    fontSize: 10,
+    fontWeight: 700,
+    color: C.teal,
+    background: C.white,
+    border: `1px solid ${C.line}`,
+    borderRadius: 6,
+    padding: '1px 6px',
+    letterSpacing: 0.3,
+  },
+  autoReset: {
+    border: `1.5px solid ${C.line}`,
+    borderRadius: 10,
+    background: C.white,
+    color: C.teal,
+    fontSize: 11,
+    fontWeight: 700,
+    padding: '0 10px',
+    marginBottom: 7,
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+  },
+  dopRow: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
+    padding: '8px 0',
+    borderBottom: `1px solid ${C.line}`,
+  },
+  dopRowLabel: { fontSize: 13, fontWeight: 700, color: C.ink },
+  dopRowHint: { fontSize: 11, color: C.sub, marginTop: 1 },
+  dopRowRight: { display: 'flex', alignItems: 'center', gap: 10 },
+  dopRowVal: { fontSize: 15, fontWeight: 700, color: C.ink, fontVariantNumeric: 'tabular-nums' },
+  dopPct: {
+    fontSize: 13,
+    fontWeight: 800,
+    borderRadius: 8,
+    padding: '3px 9px',
+    minWidth: 44,
+    textAlign: 'center',
+  },
   resultGrid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(2, 1fr)',
