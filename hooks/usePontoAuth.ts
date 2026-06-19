@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { pontoAuth as auth } from '@/lib/ponto-firebase-app';
 import { subscribeUsuario } from '@/lib/ponto-firebase';
 import { emailEhAdmin } from '@/lib/ponto-logic';
 import { usePontoStore } from '@/store/use-ponto-store';

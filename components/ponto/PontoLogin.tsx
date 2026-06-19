@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { signIn } from '@/lib/firebase';
+import { signInPonto as signIn } from '@/lib/ponto-firebase-app';
 import { TOKENS } from '@/lib/tokens';
 import { inputBase } from '@/lib/input-styles';
 import { Btn } from '@/components/ui';

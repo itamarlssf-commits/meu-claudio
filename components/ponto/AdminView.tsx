@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { signOutUser } from '@/lib/firebase';
+import { signOutPonto as signOutUser } from '@/lib/ponto-firebase-app';
 import { usePontoStore } from '@/store/use-ponto-store';
 import {
   saveFuncionaria,

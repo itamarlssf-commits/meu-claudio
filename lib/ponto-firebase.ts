@@ -1,5 +1,6 @@
 // Camada de acesso a dados do módulo de Ponto Eletrônico.
-// Reaproveita a instância Firebase de lib/firebase.ts e usa coleções isoladas (prefixo "ponto_").
+// Usa a instância Firebase DEDICADA (lib/ponto-firebase-app.ts) e coleções
+// isoladas (prefixo "ponto_") — projeto separado do CRM.
 
 import { initializeApp, deleteApp } from 'firebase/app';
 import {
@@ -20,7 +21,11 @@ import {
   serverTimestamp,
 } from 'firebase/firestore';
 import { ref, uploadString, getDownloadURL } from 'firebase/storage';
-import { db, getStorageLazy, firebaseConfigValues } from '@/lib/firebase';
+import {
+  pontoDb as db,
+  getPontoStorageLazy as getStorageLazy,
+  pontoConfigValues as firebaseConfigValues,
+} from '@/lib/ponto-firebase-app';
 import type { Funcionaria, RegistroPonto, UsuarioPonto } from '@/types/ponto';
 
 const FUNCIONARIAS_COL = collection(db, 'ponto_funcionarias');

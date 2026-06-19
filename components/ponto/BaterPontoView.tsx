@@ -1,9 +1,10 @@
 'use client';
 
 import { useMemo, useRef, useState } from 'react';
-import { signOutUser } from '@/lib/firebase';
+import { signOutPonto as signOutUser } from '@/lib/ponto-firebase-app';
 import { usePontoStore } from '@/store/use-ponto-store';
 import useBaterPonto from '@/hooks/useBaterPonto';
+import { detectarRosto } from '@/lib/face-check';
 import {
   dataLocal,
   formatDuracao,
@@ -32,7 +33,7 @@ export default function BaterPontoView() {
   const inputRef = useRef<HTMLInputElement>(null);
   const tipoPendente = useRef<TipoRegistro>('entrada');
   const [mensagem, setMensagem] = useState<string>('');
-  const [semFoto, setSemFoto] = useState(false);
+  const [verificando, setVerificando] = useState(false);
 
   const hoje = dataLocal();
   const registrosHoje = useMemo(
@@ -48,11 +49,10 @@ export default function BaterPontoView() {
   }
 
   function acionar(tipo: TipoRegistro) {
-    if (semFoto) registrar(tipo, null);
-    else abrirCamera(tipo);
+    abrirCamera(tipo);
   }
 
-  async function registrar(tipo: TipoRegistro, selfie: File | null) {
+  async function registrar(tipo: TipoRegistro, selfie: File) {
     if (!usuario?.funcionariaId) return;
     setMensagem('');
     try {
@@ -68,10 +68,29 @@ export default function BaterPontoView() {
     }
   }
 
-  function onArquivo(e: React.ChangeEvent<HTMLInputElement>) {
+  async function onArquivo(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0] ?? null;
-    registrar(tipoPendente.current, file);
     e.target.value = '';
+
+    // Selfie é obrigatória: sem foto, não registra.
+    if (!file) {
+      setMensagem('⚠️ A foto é obrigatória para registrar o ponto.');
+      return;
+    }
+
+    // Detecção de rosto (não é biometria — só confere que há um rosto na foto).
+    setMensagem('Verificando a foto…');
+    setVerificando(true);
+    try {
+      const { temRosto, verificado } = await detectarRosto(file);
+      if (verificado && !temRosto) {
+        setMensagem('⚠️ Nenhum rosto detectado na foto. Tire a selfie novamente.');
+        return;
+      }
+      await registrar(tipoPendente.current, file);
+    } finally {
+      setVerificando(false);
+    }
   }
 
   const ordenadosHoje = [...registrosHoje].sort((a, b) => a.timestamp - b.timestamp);
@@ -143,16 +162,16 @@ export default function BaterPontoView() {
         {/* Botões contextuais */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {estado === 'fora' && (
-            <BotaoPonto tipo="entrada" variant="success" label="Registrar Entrada" salvando={salvando} onAcionar={acionar} />
+            <BotaoPonto tipo="entrada" variant="success" label="Registrar Entrada" salvando={salvando || verificando} onAcionar={acionar} />
           )}
           {estado === 'trabalhando' && (
             <>
-              <BotaoPonto tipo="inicio_intervalo" variant="accent" label="Sair para intervalo" salvando={salvando} onAcionar={acionar} />
-              <BotaoPonto tipo="saida" variant="danger" label="Registrar Saída" salvando={salvando} onAcionar={acionar} />
+              <BotaoPonto tipo="inicio_intervalo" variant="accent" label="Sair para intervalo" salvando={salvando || verificando} onAcionar={acionar} />
+              <BotaoPonto tipo="saida" variant="danger" label="Registrar Saída" salvando={salvando || verificando} onAcionar={acionar} />
             </>
           )}
           {estado === 'intervalo' && (
-            <BotaoPonto tipo="fim_intervalo" variant="success" label="Voltar do intervalo" salvando={salvando} onAcionar={acionar} />
+            <BotaoPonto tipo="fim_intervalo" variant="success" label="Voltar do intervalo" salvando={salvando || verificando} onAcionar={acionar} />
           )}
         </div>
 
@@ -165,7 +184,7 @@ export default function BaterPontoView() {
           style={{ display: 'none' }}
         />
 
-        <label
+        <div
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -174,12 +193,10 @@ export default function BaterPontoView() {
             margin: '12px auto 0',
             color: TOKENS.muted,
             fontSize: 12,
-            cursor: 'pointer',
           }}
         >
-          <input type="checkbox" checked={semFoto} onChange={(e) => setSemFoto(e.target.checked)} />
-          registrar sem foto
-        </label>
+          📸 A selfie é obrigatória em cada registro.
+        </div>
 
         {mensagem && (
           <div
@@ -188,7 +205,11 @@ export default function BaterPontoView() {
               textAlign: 'center',
               fontSize: 14,
               fontWeight: 600,
-              color: mensagem.startsWith('✅') ? TOKENS.green : TOKENS.red,
+              color: mensagem.startsWith('✅')
+                ? TOKENS.green
+                : mensagem.startsWith('⚠️')
+                  ? TOKENS.red
+                  : TOKENS.ink2,
             }}
           >
             {mensagem}
