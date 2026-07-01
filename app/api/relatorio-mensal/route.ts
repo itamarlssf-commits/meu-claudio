@@ -35,13 +35,17 @@ export async function GET(request: Request) {
   }
 
   const hoje = new Date();
-  const forcar = new URL(request.url).searchParams.get('forcar') === '1';
-  if (!forcar && !ehUltimoDiaDoMes(hoje)) {
+  const params = new URL(request.url).searchParams;
+  const forcar = params.get('forcar') === '1';
+  const mesParam = params.get('mes'); // 'YYYY-MM' — reenvio manual de um mês específico
+  const ateParam = params.get('ate') ?? undefined; // 'YYYY-MM-DD' — limita o período considerado
+
+  if (!mesParam && !forcar && !ehUltimoDiaDoMes(hoje)) {
     return NextResponse.json({ ok: true, mensagem: 'Hoje não é o último dia do mês; nada a fazer.' });
   }
 
-  const ano = hoje.getFullYear();
-  const mes = hoje.getMonth() + 1;
+  const ano = mesParam ? Number(mesParam.slice(0, 4)) : hoje.getFullYear();
+  const mes = mesParam ? Number(mesParam.slice(5, 7)) : hoje.getMonth() + 1;
 
   const db = getPontoAdminDb();
   const [funcionariasSnap, registrosSnap] = await Promise.all([
@@ -62,11 +66,27 @@ export async function GET(request: Request) {
 
   const anexos: { filename: string; content: Buffer }[] = [];
   const resumoLinhas: string[] = [];
+  const resumoPorFuncionaria: {
+    nome: string;
+    totalMs: number;
+    esperadoMs: number;
+    extraMs: number;
+    faltaMs: number;
+  }[] = [];
 
   for (const func of funcionarias) {
-    const { dias, totalMs } = detalheDiarioFuncionaria(registros, func.id, ano, mes);
-    const csv = gerarCsvFuncionaria(func.nome, ano, mes, dias, totalMs);
-    const pdf = await gerarPdfFuncionaria(func.nome, ano, mes, dias, totalMs);
+    const admitidaEm = new Date(func.criadoEm).toISOString().slice(0, 10);
+    const resumo = detalheDiarioFuncionaria(
+      registros,
+      func.id,
+      ano,
+      mes,
+      func.jornadaPorDia,
+      admitidaEm,
+      ateParam,
+    );
+    const csv = gerarCsvFuncionaria(func.nome, ano, mes, resumo);
+    const pdf = await gerarPdfFuncionaria(func.nome, ano, mes, resumo);
 
     const nomeArquivo = func.nome
       .normalize('NFD')
@@ -74,7 +94,19 @@ export async function GET(request: Request) {
       .replace(/\s+/g, '-');
     anexos.push({ filename: `${nomeArquivo}-${ano}-${String(mes).padStart(2, '0')}.csv`, content: Buffer.from(csv, 'utf-8') });
     anexos.push({ filename: `${nomeArquivo}-${ano}-${String(mes).padStart(2, '0')}.pdf`, content: Buffer.from(pdf) });
-    resumoLinhas.push(`<li><strong>${func.nome}</strong>: ${formatDuracao(totalMs)}</li>`);
+    resumoLinhas.push(
+      `<li><strong>${func.nome}</strong>: ${formatDuracao(resumo.totalMs)} trabalhadas` +
+        (resumo.extraMs > 0 ? `, ${formatDuracao(resumo.extraMs)} de hora extra` : '') +
+        (resumo.faltaMs > 0 ? `, ${formatDuracao(resumo.faltaMs)} faltantes` : '') +
+        `</li>`,
+    );
+    resumoPorFuncionaria.push({
+      nome: func.nome,
+      totalMs: resumo.totalMs,
+      esperadoMs: resumo.esperadoMs,
+      extraMs: resumo.extraMs,
+      faltaMs: resumo.faltaMs,
+    });
   }
 
   const resend = new Resend(process.env.RESEND_API_KEY);
@@ -94,5 +126,10 @@ export async function GET(request: Request) {
     return NextResponse.json({ ok: false, erro: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ ok: true, funcionarias: funcionarias.length, anexos: anexos.length });
+  return NextResponse.json({
+    ok: true,
+    funcionarias: funcionarias.length,
+    anexos: anexos.length,
+    resumo: resumoPorFuncionaria,
+  });
 }

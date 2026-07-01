@@ -25,8 +25,9 @@ import {
   pontoDb as db,
   getPontoStorageLazy as getStorageLazy,
   pontoConfigValues as firebaseConfigValues,
+  enviarLinkDeSenha,
 } from '@/lib/ponto-firebase-app';
-import type { Funcionaria, LocalTrabalho, RegistroPonto, UsuarioPonto } from '@/types/ponto';
+import type { Funcionaria, JornadaPorDia, LocalTrabalho, RegistroPonto, UsuarioPonto } from '@/types/ponto';
 
 const FUNCIONARIAS_COL = collection(db, 'ponto_funcionarias');
 const REGISTROS_COL = collection(db, 'ponto_registros');
@@ -81,19 +82,23 @@ export async function saveFuncionaria(funcionaria: Funcionaria): Promise<void> {
  * Cria o login (Firebase Auth) da funcionária usando uma instância secundária
  * do app, para não deslogar o admin que está fazendo o cadastro. Grava também
  * o doc de papel em ponto_usuarios e o cadastro em ponto_funcionarias.
- * Retorna o uid criado.
+ *
+ * A conta nasce com uma senha aleatória que nem o admin nem a funcionária
+ * chegam a usar: em seguida enviamos o e-mail de "criar sua senha" (mesmo
+ * link do "esqueci a senha") para ela escolher a própria senha no primeiro
+ * acesso. Retorna o uid criado.
  */
 export async function criarContaFuncionaria(params: {
   nome: string;
   email: string;
-  senha: string;
   local: LocalTrabalho;
-  jornadaHoras?: number;
+  jornadaPorDia?: JornadaPorDia;
 }): Promise<string> {
   const secundario = initializeApp(firebaseConfigValues, `ponto-secundario-${Date.now()}`);
   try {
     const authSec = getAuth(secundario);
-    const cred = await createUserWithEmailAndPassword(authSec, params.email, params.senha);
+    const senhaTemporaria = crypto.randomUUID();
+    const cred = await createUserWithEmailAndPassword(authSec, params.email, senhaTemporaria);
     const uid = cred.user.uid;
 
     const funcionaria: Funcionaria = {
@@ -101,7 +106,8 @@ export async function criarContaFuncionaria(params: {
       nome: params.nome,
       email: params.email,
       local: params.local,
-      jornadaHoras: params.jornadaHoras,
+      jornadaPorDia: params.jornadaPorDia,
+      jornadaSemanalHoras: params.jornadaPorDia?.reduce((acc, h) => acc + h, 0),
       ativo: true,
       criadoEm: Date.now(),
     };
@@ -113,6 +119,7 @@ export async function criarContaFuncionaria(params: {
     });
 
     await signOut(authSec);
+    await enviarLinkDeSenha(params.email);
     return uid;
   } finally {
     await deleteApp(secundario).catch(() => {});

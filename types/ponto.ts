@@ -6,6 +6,10 @@ export type LocalTrabalho = 'Consultório Ellas' | 'Casa';
 
 export const LOCAIS_TRABALHO: LocalTrabalho[] = ['Consultório Ellas', 'Casa'];
 
+/** Índice 0 = domingo … 6 = sábado. */
+export const DIAS_SEMANA_LABELS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'] as const;
+export type JornadaPorDia = [number, number, number, number, number, number, number];
+
 export const TIPO_LABELS: Record<TipoRegistro, string> = {
   entrada: 'Entrada',
   inicio_intervalo: 'Saída p/ intervalo',
@@ -22,7 +26,8 @@ export interface Funcionaria {
   nome: string;
   local: LocalTrabalho;
   email?: string;
-  jornadaHoras?: number; // jornada diária esperada (opcional)
+  jornadaPorDia?: JornadaPorDia; // horas esperadas (já líquidas de almoço) por dia da semana
+  jornadaSemanalHoras?: number; // soma de jornadaPorDia — guardado só para exibição rápida
   ativo: boolean;
   criadoEm: number;
 }

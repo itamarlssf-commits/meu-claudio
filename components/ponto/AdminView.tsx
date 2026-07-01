@@ -15,12 +15,14 @@ import {
   formatDuracao,
   formatDataBR,
   relatorioMensal,
+  JORNADA_PADRAO,
+  descreverJornada,
 } from '@/lib/ponto-logic';
 import { TOKENS } from '@/lib/tokens';
 import { inputBase } from '@/lib/input-styles';
 import { Card, Btn, Chip, Modal, Field, SectionHeader, KPI } from '@/components/ui';
-import { TIPO_LABELS, LOCAIS_TRABALHO } from '@/types/ponto';
-import type { Funcionaria, RegistroPonto, TipoRegistro, LocalTrabalho } from '@/types/ponto';
+import { TIPO_LABELS, LOCAIS_TRABALHO, DIAS_SEMANA_LABELS } from '@/types/ponto';
+import type { Funcionaria, RegistroPonto, TipoRegistro, LocalTrabalho, JornadaPorDia } from '@/types/ponto';
 
 type Aba = 'registros' | 'funcionarias' | 'relatorio';
 
@@ -413,7 +415,7 @@ function AbaFuncionarias({ funcionarias }: { funcionarias: Funcionaria[] }) {
                   <div style={{ fontSize: 12, color: TOKENS.muted }}>
                     {f.local}
                     {f.email ? ` · ${f.email}` : ''}
-                    {f.jornadaHoras ? ` · ${f.jornadaHoras}h/dia` : ''}
+                    {f.jornadaPorDia ? ` · ${descreverJornada(f.jornadaPorDia)}` : ''}
                   </div>
                 </div>
                 <Chip color={f.ativo ? 'green' : 'gray'} size="xs">
@@ -433,16 +435,21 @@ function AbaFuncionarias({ funcionarias }: { funcionarias: Funcionaria[] }) {
 function ModalNovaFuncionaria({ onClose }: { onClose: () => void }) {
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
-  const [senha, setSenha] = useState('');
   const [local, setLocal] = useState<LocalTrabalho>('Casa');
-  const [jornada, setJornada] = useState('8');
+  const [jornadaPorDia, setJornadaPorDia] = useState<JornadaPorDia>([...JORNADA_PADRAO]);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState('');
 
+  function alterarHoraDoDia(indice: number, valor: string) {
+    const copia = [...jornadaPorDia] as JornadaPorDia;
+    copia[indice] = valor ? Number(valor) : 0;
+    setJornadaPorDia(copia);
+  }
+
   async function salvar() {
     setErro('');
-    if (!nome || !email || senha.length < 6) {
-      setErro('Preencha nome, e-mail e uma senha de pelo menos 6 caracteres.');
+    if (!nome || !email) {
+      setErro('Preencha nome e e-mail.');
       return;
     }
     setSalvando(true);
@@ -450,9 +457,8 @@ function ModalNovaFuncionaria({ onClose }: { onClose: () => void }) {
       await criarContaFuncionaria({
         nome,
         email,
-        senha,
         local,
-        jornadaHoras: jornada ? Number(jornada) : undefined,
+        jornadaPorDia,
       });
       onClose();
     } catch (e: unknown) {
@@ -482,39 +488,44 @@ function ModalNovaFuncionaria({ onClose }: { onClose: () => void }) {
             placeholder="email@exemplo.com"
           />
         </Field>
-        <Field label="Senha inicial" hint="A funcionária usará para entrar (mín. 6 caracteres)">
-          <input
-            type="text"
-            value={senha}
-            onChange={(e) => setSenha(e.target.value)}
+        <Field label="Local">
+          <select
+            value={local}
+            onChange={(e) => setLocal(e.target.value as LocalTrabalho)}
             style={inputBase}
-            placeholder="senha"
-          />
+          >
+            {LOCAIS_TRABALHO.map((l) => (
+              <option key={l} value={l}>
+                {l}
+              </option>
+            ))}
+          </select>
         </Field>
-        <div style={{ display: 'flex', gap: 10 }}>
-          <Field label="Local">
-            <select
-              value={local}
-              onChange={(e) => setLocal(e.target.value as LocalTrabalho)}
-              style={inputBase}
-            >
-              {LOCAIS_TRABALHO.map((l) => (
-                <option key={l} value={l}>
-                  {l}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <Field label="Jornada (h/dia)">
-            <input
-              type="number"
-              value={jornada}
-              onChange={(e) => setJornada(e.target.value)}
-              style={inputBase}
-              min={1}
-              max={24}
-            />
-          </Field>
+
+        <Field
+          label="Jornada por dia (horas líquidas, já sem o almoço)"
+          hint={`Total na semana: ${jornadaPorDia.reduce((a, h) => a + h, 0)}h`}
+        >
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 6 }}>
+            {DIAS_SEMANA_LABELS.map((label, i) => (
+              <div key={label} style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: 10, color: TOKENS.muted, marginBottom: 4 }}>{label}</div>
+                <input
+                  type="number"
+                  value={jornadaPorDia[i]}
+                  onChange={(e) => alterarHoraDoDia(i, e.target.value)}
+                  style={{ ...inputBase, padding: '6px 4px', textAlign: 'center' }}
+                  min={0}
+                  max={24}
+                  step={0.5}
+                />
+              </div>
+            ))}
+          </div>
+        </Field>
+
+        <div style={{ fontSize: 11, color: TOKENS.muted }}>
+          Ela vai receber um e-mail para criar a própria senha e acessar.
         </div>
 
         {erro && (

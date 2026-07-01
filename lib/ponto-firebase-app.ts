@@ -14,6 +14,9 @@ import {
   getAuth,
   signInWithEmailAndPassword,
   signOut,
+  sendPasswordResetEmail,
+  confirmPasswordReset,
+  verifyPasswordResetCode,
   type User,
 } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
@@ -67,4 +70,25 @@ export async function signInPonto(email: string, senha: string): Promise<User> {
 
 export async function signOutPonto(): Promise<void> {
   await signOut(pontoAuth);
+}
+
+/**
+ * Envia o e-mail de "criar/redefinir senha" (mesmo fluxo serve para o
+ * primeiro acesso e para "esqueci a senha" — o link sempre deixa a pessoa
+ * escolher uma senha nova). O link volta para /ponto/redefinir-senha nesta
+ * mesma origem (funciona tanto em localhost quanto no domínio publicado,
+ * desde que a origem esteja nos "Authorized domains" do Firebase Auth).
+ */
+export async function enviarLinkDeSenha(email: string): Promise<void> {
+  await sendPasswordResetEmail(pontoAuth, email, {
+    url: `${window.location.origin}/ponto/redefinir-senha`,
+  });
+}
+
+export async function verificarCodigoDeSenha(oobCode: string): Promise<string> {
+  return verifyPasswordResetCode(pontoAuth, oobCode);
+}
+
+export async function confirmarNovaSenha(oobCode: string, novaSenha: string): Promise<void> {
+  await confirmPasswordReset(pontoAuth, oobCode, novaSenha);
 }

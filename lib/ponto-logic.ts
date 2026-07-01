@@ -1,11 +1,34 @@
 // Utilitários do módulo de Ponto Eletrônico: datas, horas trabalhadas,
 // relatório mensal, compressão de selfie e captura de GPS.
 
-import type { Funcionaria, LocalTrabalho, RegistroPonto, TipoRegistro } from '@/types/ponto';
-import { TIPOS_ABRE } from '@/types/ponto';
+import type { Funcionaria, JornadaPorDia, LocalTrabalho, RegistroPonto, TipoRegistro } from '@/types/ponto';
+import { TIPOS_ABRE, DIAS_SEMANA_LABELS } from '@/types/ponto';
 
 function abre(tipo: TipoRegistro): boolean {
   return TIPOS_ABRE.includes(tipo);
+}
+
+// ── Jornada contratual por dia da semana ───────────────────────────
+
+/** Padrão quando a funcionária não tem horário próprio cadastrado: 44h/semana, 8h48 seg-sex. */
+export const JORNADA_PADRAO: JornadaPorDia = [0, 8.8, 8.8, 8.8, 8.8, 8.8, 0];
+
+/** 0 = domingo … 6 = sábado, calculado no fuso local (evita off-by-one de UTC). */
+export function diaDaSemana(data: string): number {
+  const [ano, mes, dia] = data.split('-').map(Number);
+  return new Date(ano, mes - 1, dia).getDay();
+}
+
+/** Descrição compacta do horário, ex.: "Seg 4h · Ter 10h · Qua 10h · Qui 10h · Sex 3h". */
+export function descreverJornada(jornadaPorDia: JornadaPorDia): string {
+  return jornadaPorDia
+    .map((h, i) => (h > 0 ? `${DIAS_SEMANA_LABELS[i]} ${h}h` : null))
+    .filter(Boolean)
+    .join(' · ');
+}
+
+export function somaSemanal(jornadaPorDia: JornadaPorDia): number {
+  return jornadaPorDia.reduce((acc, h) => acc + h, 0);
 }
 
 export function novoId(): string {
