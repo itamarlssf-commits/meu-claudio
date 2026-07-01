@@ -9,8 +9,11 @@ import {
   horaLocal,
   comprimirImagem,
   obterLocalizacao,
+  distanciaMetros,
+  LOCAL_COORD,
+  RAIO_AVISO_LOCAL_M,
 } from '@/lib/ponto-logic';
-import type { RegistroPonto, TipoRegistro } from '@/types/ponto';
+import type { LocalTrabalho, RegistroPonto, TipoRegistro } from '@/types/ponto';
 
 interface BaterPontoParams {
   funcionariaId: string;
@@ -18,6 +21,14 @@ interface BaterPontoParams {
   tipo: TipoRegistro;
   selfie?: File | null;
   obs?: string;
+  /** Local de trabalho cadastrado da funcionária — usado só para o aviso de distância. */
+  local?: LocalTrabalho;
+}
+
+interface BaterPontoResultado {
+  registro: RegistroPonto;
+  /** Aviso (não bloqueia): funcionária está fora do raio esperado do local cadastrado. */
+  avisoDistanciaM?: number;
 }
 
 /**
@@ -30,7 +41,14 @@ export default function useBaterPonto() {
   const [salvando, setSalvando] = useState(false);
 
   const baterPonto = useCallback(
-    async ({ funcionariaId, funcionariaNome, tipo, selfie, obs }: BaterPontoParams) => {
+    async ({
+      funcionariaId,
+      funcionariaNome,
+      tipo,
+      selfie,
+      obs,
+      local,
+    }: BaterPontoParams): Promise<BaterPontoResultado> => {
       setSalvando(true);
       try {
         const agora = new Date();
@@ -47,6 +65,16 @@ export default function useBaterPonto() {
           precisao = coord.precisao;
         } catch {
           // segue sem localização
+        }
+
+        // Aviso de distância (só informativo — nunca bloqueia o registro).
+        let avisoDistanciaM: number | undefined;
+        if (local && lat != null && lng != null) {
+          const referencia = LOCAL_COORD[local];
+          const distancia = distanciaMetros(lat, lng, referencia.lat, referencia.lng);
+          if (distancia > RAIO_AVISO_LOCAL_M) {
+            avisoDistanciaM = Math.round(distancia);
+          }
         }
 
         // Selfie (também opcional)
@@ -78,7 +106,7 @@ export default function useBaterPonto() {
         upsertRegistro(registro);
         await saveRegistro(registro);
         setSyncStatus('live');
-        return registro;
+        return { registro, avisoDistanciaM };
       } catch (err) {
         setSyncStatus('offline');
         throw err;

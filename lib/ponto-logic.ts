@@ -1,7 +1,7 @@
 // Utilitários do módulo de Ponto Eletrônico: datas, horas trabalhadas,
 // relatório mensal, compressão de selfie e captura de GPS.
 
-import type { Funcionaria, RegistroPonto, TipoRegistro } from '@/types/ponto';
+import type { Funcionaria, LocalTrabalho, RegistroPonto, TipoRegistro } from '@/types/ponto';
 import { TIPOS_ABRE } from '@/types/ponto';
 
 function abre(tipo: TipoRegistro): boolean {
@@ -249,4 +249,32 @@ export function obterLocalizacao(): Promise<Coordenadas> {
       { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 },
     );
   });
+}
+
+// ── Geolocalização de referência (aviso, não bloqueia) ─────────────
+// Coordenadas fixas dos dois locais de trabalho. "Casa" é a residência do
+// Dr. Itamar (empregada doméstica); "Consultório Ellas" é o endereço do
+// consultório. O raio é uma margem de tolerância, não uma cerca rígida.
+
+export const LOCAL_COORD: Record<LocalTrabalho, { lat: number; lng: number }> = {
+  'Consultório Ellas': { lat: -8.033257, lng: -34.9045967 },
+  Casa: { lat: -8.0304505, lng: -34.8946544 },
+};
+export const RAIO_AVISO_LOCAL_M = 150;
+
+/** Distância entre duas coordenadas em metros (fórmula de Haversine). */
+export function distanciaMetros(
+  lat1: number,
+  lng1: number,
+  lat2: number,
+  lng2: number,
+): number {
+  const R = 6371000;
+  const toRad = (deg: number) => (deg * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }

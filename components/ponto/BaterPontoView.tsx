@@ -1,10 +1,11 @@
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { signOutPonto as signOutUser } from '@/lib/ponto-firebase-app';
 import { usePontoStore } from '@/store/use-ponto-store';
 import useBaterPonto from '@/hooks/useBaterPonto';
 import { detectarRosto } from '@/lib/face-check';
+import { getFuncionaria } from '@/lib/ponto-firebase';
 import {
   dataLocal,
   formatDuracao,
@@ -14,7 +15,7 @@ import {
 import { TOKENS } from '@/lib/tokens';
 import { Card, Btn, Chip } from '@/components/ui';
 import { TIPO_LABELS } from '@/types/ponto';
-import type { TipoRegistro } from '@/types/ponto';
+import type { LocalTrabalho, TipoRegistro } from '@/types/ponto';
 
 type ChipColor = 'green' | 'red' | 'amber' | 'blue' | 'gray';
 const CHIP_COR: Record<TipoRegistro, ChipColor> = {
@@ -34,6 +35,12 @@ export default function BaterPontoView() {
   const tipoPendente = useRef<TipoRegistro>('entrada');
   const [mensagem, setMensagem] = useState<string>('');
   const [verificando, setVerificando] = useState(false);
+  const [localTrabalho, setLocalTrabalho] = useState<LocalTrabalho | undefined>();
+
+  useEffect(() => {
+    if (!usuario?.funcionariaId) return;
+    getFuncionaria(usuario.funcionariaId).then((f) => setLocalTrabalho(f?.local));
+  }, [usuario?.funcionariaId]);
 
   const hoje = dataLocal();
   const registrosHoje = useMemo(
@@ -56,13 +63,18 @@ export default function BaterPontoView() {
     if (!usuario?.funcionariaId) return;
     setMensagem('');
     try {
-      await baterPonto({
+      const { avisoDistanciaM } = await baterPonto({
         funcionariaId: usuario.funcionariaId,
         funcionariaNome: usuario.nome,
         tipo,
         selfie,
+        local: localTrabalho,
       });
-      setMensagem(`✅ ${TIPO_LABELS[tipo]} registrada!`);
+      setMensagem(
+        avisoDistanciaM != null
+          ? `✅ ${TIPO_LABELS[tipo]} registrada! ⚠️ Você está a ~${avisoDistanciaM}m de "${localTrabalho}".`
+          : `✅ ${TIPO_LABELS[tipo]} registrada!`,
+      );
     } catch {
       setMensagem('⚠️ Não foi possível registrar. Tente novamente.');
     }
@@ -206,7 +218,9 @@ export default function BaterPontoView() {
               fontSize: 14,
               fontWeight: 600,
               color: mensagem.startsWith('✅')
-                ? TOKENS.green
+                ? mensagem.includes('⚠️')
+                  ? TOKENS.amber
+                  : TOKENS.green
                 : mensagem.startsWith('⚠️')
                   ? TOKENS.red
                   : TOKENS.ink2,

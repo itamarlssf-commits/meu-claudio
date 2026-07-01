@@ -26,7 +26,7 @@ import {
   getPontoStorageLazy as getStorageLazy,
   pontoConfigValues as firebaseConfigValues,
 } from '@/lib/ponto-firebase-app';
-import type { Funcionaria, RegistroPonto, UsuarioPonto } from '@/types/ponto';
+import type { Funcionaria, LocalTrabalho, RegistroPonto, UsuarioPonto } from '@/types/ponto';
 
 const FUNCIONARIAS_COL = collection(db, 'ponto_funcionarias');
 const REGISTROS_COL = collection(db, 'ponto_registros');
@@ -63,6 +63,12 @@ export function subscribeFuncionarias(
   });
 }
 
+export async function getFuncionaria(id: string): Promise<Funcionaria | null> {
+  const snap = await getDoc(doc(db, 'ponto_funcionarias', id));
+  if (!snap.exists()) return null;
+  return { ...snap.data(), id: snap.id } as Funcionaria;
+}
+
 export async function saveFuncionaria(funcionaria: Funcionaria): Promise<void> {
   const { id, ...rest } = funcionaria;
   await setDoc(doc(db, 'ponto_funcionarias', id), {
@@ -81,7 +87,7 @@ export async function criarContaFuncionaria(params: {
   nome: string;
   email: string;
   senha: string;
-  local: string;
+  local: LocalTrabalho;
   jornadaHoras?: number;
 }): Promise<string> {
   const secundario = initializeApp(firebaseConfigValues, `ponto-secundario-${Date.now()}`);

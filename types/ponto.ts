@@ -2,6 +2,9 @@
 
 export type TipoRegistro = 'entrada' | 'inicio_intervalo' | 'fim_intervalo' | 'saida';
 export type PapelUsuario = 'admin' | 'funcionaria';
+export type LocalTrabalho = 'Consultório Ellas' | 'Casa';
+
+export const LOCAIS_TRABALHO: LocalTrabalho[] = ['Consultório Ellas', 'Casa'];
 
 export const TIPO_LABELS: Record<TipoRegistro, string> = {
   entrada: 'Entrada',
@@ -17,7 +20,7 @@ export const TIPOS_FECHA: TipoRegistro[] = ['saida', 'inicio_intervalo'];
 export interface Funcionaria {
   id: string; // = uid do Firebase Auth quando a funcionária tem login
   nome: string;
-  local: string; // ex.: 'Casa', 'Consultório'
+  local: LocalTrabalho;
   email?: string;
   jornadaHoras?: number; // jornada diária esperada (opcional)
   ativo: boolean;

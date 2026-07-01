@@ -19,8 +19,8 @@ import {
 import { TOKENS } from '@/lib/tokens';
 import { inputBase } from '@/lib/input-styles';
 import { Card, Btn, Chip, Modal, Field, SectionHeader, KPI } from '@/components/ui';
-import { TIPO_LABELS } from '@/types/ponto';
-import type { Funcionaria, RegistroPonto, TipoRegistro } from '@/types/ponto';
+import { TIPO_LABELS, LOCAIS_TRABALHO } from '@/types/ponto';
+import type { Funcionaria, RegistroPonto, TipoRegistro, LocalTrabalho } from '@/types/ponto';
 
 type Aba = 'registros' | 'funcionarias' | 'relatorio';
 
@@ -434,7 +434,7 @@ function ModalNovaFuncionaria({ onClose }: { onClose: () => void }) {
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
-  const [local, setLocal] = useState('Casa');
+  const [local, setLocal] = useState<LocalTrabalho>('Casa');
   const [jornada, setJornada] = useState('8');
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState('');
@@ -493,7 +493,17 @@ function ModalNovaFuncionaria({ onClose }: { onClose: () => void }) {
         </Field>
         <div style={{ display: 'flex', gap: 10 }}>
           <Field label="Local">
-            <input value={local} onChange={(e) => setLocal(e.target.value)} style={inputBase} placeholder="Casa / Consultório" />
+            <select
+              value={local}
+              onChange={(e) => setLocal(e.target.value as LocalTrabalho)}
+              style={inputBase}
+            >
+              {LOCAIS_TRABALHO.map((l) => (
+                <option key={l} value={l}>
+                  {l}
+                </option>
+              ))}
+            </select>
           </Field>
           <Field label="Jornada (h/dia)">
             <input

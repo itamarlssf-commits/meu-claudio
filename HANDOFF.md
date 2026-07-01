@@ -27,14 +27,35 @@
 
 ## 3. Status atual
 
-- **Fase 1 = COMPLETA e no ar** (build + lint passam). Está na branch
-  `claude/inspiring-mccarthy-muc3jr`, PR **#12** (rascunho), preview da Vercel "Ready".
-- Preview: `https://meu-claudio-git-claude-inspiri-3b94ab-itamar-santana-s-projects.vercel.app/ponto`
-- PR: https://github.com/itamarlssf-commits/meu-claudio/pull/12
+- **Fase 1 = COMPLETA** — Firebase dedicado (`ponto-eletronico-f6d5e`) 100% configurado:
+  Authentication (e-mail/senha), Firestore (`southamerica-east1`, regras publicadas),
+  Storage (`southamerica-east1`, plano Blaze, regras publicadas), app Web registrado,
+  admin `itamarlssf@gmail.com` já existe. `.env.local` preenchido. Testado localmente
+  (`npm run dev`, `npm run lint`, `npm run build` — todos passam).
+- **Fase 2 = código completo, falta 1 credencial** — rota `/api/relatorio-mensal`
+  (Firebase Admin SDK + Resend + pdf-lib), cron no `vercel.json` (dias 28-31, 9h,
+  só dispara de verdade no último dia do mês). Testada de ponta a ponta com uma
+  funcionária fictícia: gerou PDF+CSV corretamente e só travou no envio por falta da
+  `RESEND_API_KEY` (você criou a conta Resend mas ainda não colou a key no `.env.local`).
+  Dados de teste já foram removidos do Firebase.
+- **Extra feito**: campo "Local" da funcionária agora é fixo (`Consultório Ellas` /
+  `Casa` — o admin escolhe manualmente qual funcionária é de cada local ao cadastrar).
+  "Casa" = residência do Dr. Itamar (empregada doméstica), não a casa da funcionária.
+  Para os dois locais, o app compara o GPS capturado com o endereço de referência
+  (`lib/ponto-logic.ts` → `LOCAL_COORD`) e mostra um aviso (âmbar) se a funcionária
+  estiver a mais de 150m — **não bloqueia** o registro, é só um alerta.
+- PR **#12** (rascunho) na branch `claude/inspiring-mccarthy-muc3jr`.
+  PR: https://github.com/itamarlssf-commits/meu-claudio/pull/12
 
-Enquanto você não criar o projeto Firebase dedicado, o ponto **funciona com fallback** no
-Firebase do CRM (não quebra). Assim que preencher as variáveis, ele passa a usar o projeto
-separado automaticamente.
+## 3.1 O que falta pra Fase 2 rodar de verdade
+
+1. Colar `RESEND_API_KEY` no `.env.local` (você já tem a conta e a key, só falta colar).
+2. Ao fazer deploy: copiar TODAS as variáveis novas do `.env.local` (seção "Fase 2") para
+   as Environment Variables do projeto na Vercel — inclui `RESEND_API_KEY`, `CRON_SECRET`,
+   `PONTO_FIREBASE_ADMIN_PROJECT_ID/CLIENT_EMAIL/PRIVATE_KEY`. Sem isso o cron da Vercel
+   falha silenciosamente (401) ou não consegue ler o Firestore.
+3. Cadastrar as funcionárias reais (aba "Funcionárias" do admin) — sem isso o relatório
+   roda mas não tem ninguém pra reportar.
 
 ---
 
