@@ -105,7 +105,7 @@ export default function PontoLogin() {
                 letterSpacing: '-0.01em',
               }}
             >
-              Ponto Eletrônico
+              PontoFácil
             </h1>
             <p
               style={{

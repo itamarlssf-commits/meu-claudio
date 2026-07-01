@@ -1,6 +1,6 @@
 {
-  "name": "Ponto Eletrônico",
-  "short_name": "Ponto",
+  "name": "PontoFácil",
+  "short_name": "PontoFácil",
   "description": "Registro de jornada de trabalho",
   "start_url": "/ponto",
   "scope": "/ponto",

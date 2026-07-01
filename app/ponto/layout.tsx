@@ -1,13 +1,13 @@
 import type { Metadata, Viewport } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Ponto Eletrônico',
+  title: 'PontoFácil',
   description: 'Registro de jornada de trabalho',
   manifest: '/ponto-manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'Ponto',
+    title: 'PontoFácil',
   },
   icons: {
     icon: '/ponto-icon.svg',
