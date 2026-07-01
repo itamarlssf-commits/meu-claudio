@@ -5,6 +5,74 @@
 
 ---
 
+## REEL 0 — Highlights da Semana em GO ⚡
+**⏱ ~30 segundos | Prioridade: PUBLICAR PRIMEIRO | Público: médicos + pacientes**
+
+---
+
+### 🎬 Abertura (0–3s)
+> Câmera frontal, tom energético de "resumo rápido"
+> **Texto em tela (grande, animado):**
+> `5 novidades que todo ginecologista precisa saber essa semana`
+
+---
+
+### 🗣 Fala + Texto em tela (3–25s)
+
+**[3–7s]**
+> "Que semana cheia de novidades na ginecologia e obstetrícia! Vem comigo rápido."
+
+---
+
+**[7–11s]**
+> "Um: o FDA retirou a caixa preta da terapia hormonal. A ciência mudou o jogo da menopausa."
+
+📌 *Texto em tela:* `1️⃣ FDA remove alerta máximo da TH na menopausa`
+
+---
+
+**[11–15s]**
+> "Dois: o implante anticoncepcional Nexplanon agora tem validade de 5 anos. Zero gravidez nos anos 4 e 5."
+
+📌 *Texto em tela:* `2️⃣ Nexplanon: 3 anos → 5 anos ✓`
+
+---
+
+**[15–19s]**
+> "Três: o ACOG aprovou autocoleta de HPV em casa para rastreio do câncer do colo. Mesmo resultado, mais acesso."
+
+📌 *Texto em tela:* `3️⃣ Autocoleta de HPV aprovada pelo ACOG`
+
+---
+
+**[19–23s]**
+> "Quatro: exame de sangue PlGF pode personalizar quando usar — ou parar — a aspirina na gravidez para prevenir pré-eclâmpsia."
+
+📌 *Texto em tela:* `4️⃣ Aspirina na gestação guiada por PlGF`
+
+---
+
+**[23–25s]**
+> "Vai fundo em qual dessas você quer saber mais?"
+
+📌 *Texto em tela:* `💬 Me conta nos comentários qual você quer saber mais!`
+
+---
+
+### 📲 CTA (25–30s)
+> "Segue o perfil que essa semana tem reel aprofundado de cada uma. Qual você quer primeiro?"
+📌 *Texto em tela:* `👆 Segue para não perder | 💬 Comenta o número`
+
+---
+
+### # Hashtags sugeridas
+`#ginecologia #obstetricia #saúdedamulher #dritamar #novidades #menopausa #implante #HPV #gravidez #destacadasemana`
+
+---
+---
+
+---
+
 > **Formato padrão de cada roteiro**
 > - ⏱ Duração estimada
 > - 🎬 Cena / ação sugerida
