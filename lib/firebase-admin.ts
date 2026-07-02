@@ -11,6 +11,7 @@
 
 import { getApps, initializeApp, cert, type App } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
+import { getAuth } from 'firebase-admin/auth';
 
 const ADMIN_APP_NAME = 'ponto-admin';
 
@@ -38,4 +39,8 @@ export function getPontoAdminApp(): App {
 
 export function getPontoAdminDb() {
   return getFirestore(getPontoAdminApp());
+}
+
+export function getPontoAdminAuth() {
+  return getAuth(getPontoAdminApp());
 }

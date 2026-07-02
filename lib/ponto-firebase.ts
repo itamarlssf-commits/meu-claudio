@@ -23,6 +23,7 @@ import {
 import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 import {
   pontoDb as db,
+  pontoAuth,
   getPontoStorageLazy as getStorageLazy,
   pontoConfigValues as firebaseConfigValues,
   enviarLinkDeSenha,
@@ -123,6 +124,26 @@ export async function criarContaFuncionaria(params: {
     return uid;
   } finally {
     await deleteApp(secundario).catch(() => {});
+  }
+}
+
+/**
+ * Exclui a funcionária por completo (conta de login + perfil + cadastro),
+ * via rota de servidor que usa o Admin SDK. Os registros de ponto dela
+ * continuam guardados como histórico.
+ */
+export async function excluirFuncionaria(id: string): Promise<void> {
+  const idToken = await pontoAuth.currentUser?.getIdToken();
+  if (!idToken) throw new Error('Não autenticado');
+
+  const resp = await fetch('/api/ponto/excluir-funcionaria', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+    body: JSON.stringify({ funcionariaId: id }),
+  });
+  if (!resp.ok) {
+    const dados = await resp.json().catch(() => ({}));
+    throw new Error(dados.erro ?? 'Não foi possível excluir a funcionária.');
   }
 }
 

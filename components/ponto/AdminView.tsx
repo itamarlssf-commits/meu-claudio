@@ -6,6 +6,7 @@ import { usePontoStore } from '@/store/use-ponto-store';
 import {
   saveFuncionaria,
   criarContaFuncionaria,
+  excluirFuncionaria,
   saveRegistro,
   deleteRegistro,
 } from '@/lib/ponto-firebase';
@@ -388,6 +389,24 @@ function ModalEditarRegistro({
 
 function AbaFuncionarias({ funcionarias }: { funcionarias: Funcionaria[] }) {
   const [novaAberta, setNovaAberta] = useState(false);
+  const [excluindoId, setExcluindoId] = useState<string | null>(null);
+  const [erro, setErro] = useState('');
+
+  async function handleExcluir(f: Funcionaria) {
+    const confirmado = window.confirm(
+      `Excluir "${f.nome}"? Ela perde o acesso e o cadastro é removido. Os registros de ponto já feitos continuam guardados.`,
+    );
+    if (!confirmado) return;
+    setErro('');
+    setExcluindoId(f.id);
+    try {
+      await excluirFuncionaria(f.id);
+    } catch (e: unknown) {
+      setErro(e instanceof Error ? e.message : 'Não foi possível excluir.');
+    } finally {
+      setExcluindoId(null);
+    }
+  }
 
   return (
     <>
@@ -401,6 +420,21 @@ function AbaFuncionarias({ funcionarias }: { funcionarias: Funcionaria[] }) {
         }
       />
 
+      {erro && (
+        <div
+          style={{
+            background: TOKENS.redSoft,
+            color: '#dc2626',
+            borderRadius: 8,
+            padding: '8px 12px',
+            fontSize: 12,
+            marginBottom: 10,
+          }}
+        >
+          {erro}
+        </div>
+      )}
+
       {funcionarias.length === 0 ? (
         <Card style={{ textAlign: 'center', color: TOKENS.muted, fontSize: 13 }}>
           Nenhuma funcionária cadastrada. Clique em “Nova funcionária”.
@@ -409,7 +443,7 @@ function AbaFuncionarias({ funcionarias }: { funcionarias: Funcionaria[] }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {funcionarias.map((f) => (
             <Card key={f.id} padding={14}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
                 <div>
                   <div style={{ fontWeight: 700, color: TOKENS.ink }}>{f.nome}</div>
                   <div style={{ fontSize: 12, color: TOKENS.muted }}>
@@ -418,9 +452,19 @@ function AbaFuncionarias({ funcionarias }: { funcionarias: Funcionaria[] }) {
                     {f.jornadaPorDia ? ` · ${descreverJornada(f.jornadaPorDia)}` : ''}
                   </div>
                 </div>
-                <Chip color={f.ativo ? 'green' : 'gray'} size="xs">
-                  {f.ativo ? 'Ativa' : 'Inativa'}
-                </Chip>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Chip color={f.ativo ? 'green' : 'gray'} size="xs">
+                    {f.ativo ? 'Ativa' : 'Inativa'}
+                  </Chip>
+                  <Btn
+                    variant="danger"
+                    size="sm"
+                    disabled={excluindoId === f.id}
+                    onClick={() => handleExcluir(f)}
+                  >
+                    {excluindoId === f.id ? 'Excluindo…' : 'Excluir'}
+                  </Btn>
+                </div>
               </div>
             </Card>
           ))}
