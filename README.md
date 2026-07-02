@@ -5,6 +5,14 @@ Aplicativo em **Next.js 14 + TypeScript + Tailwind + Firebase** com duas áreas:
 - **/** — CRM do consultório (pacientes, agenda, atendimentos, financeiro).
 - **/ponto** — **Ponto eletrônico** para registro de jornada das funcionárias.
 
+## Instalação no Windows (sem terminal)
+
+1. Baixe o projeto: **Code → Download ZIP** aqui no GitHub e extraia a pasta.
+2. Dê dois cliques em **`instalar.bat`** (instala o Node.js se preciso e as dependências).
+3. Para usar o sistema, dê dois cliques em **`iniciar.bat`** — o navegador abre sozinho em http://localhost:3000.
+
+Os dados continuam no Firebase (nuvem): o notebook e o site na Vercel ficam sempre sincronizados.
+
 ## Como rodar localmente
 
 1. Instale as dependências:
