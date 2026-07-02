@@ -1,0 +1,62 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ⚠️ AJUSTE AQUI: e-mail(s) do empregador/administrador (o mesmo usado para
+    // logar no consultório). Deve bater com NEXT_PUBLIC_PONTO_ADMIN_EMAILS.
+    function adminEmails() {
+      return ['itamarlssf@gmail.com'];
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email in adminEmails() ||
+        (
+          exists(/databases/$(database)/documents/ponto_usuarios/$(request.auth.uid)) &&
+          get(/databases/$(database)/documents/ponto_usuarios/$(request.auth.uid)).data.papel == 'admin'
+        )
+      );
+    }
+
+    // ── CRM do consultório — somente administrador ──
+    // Impede que contas de funcionárias (login do ponto) leiam dados de pacientes.
+    match /consultorio/{doc=**} {
+      allow read, write: if isAdmin();
+    }
+    match /leads/{doc=**} {
+      allow read, write: if isAdmin();
+    }
+
+    // ── Ponto: perfis de usuário ──
+    match /ponto_usuarios/{uid} {
+      allow read: if isSignedIn() && (request.auth.uid == uid || isAdmin());
+      allow write: if isAdmin();
+    }
+
+    // ── Ponto: cadastro de funcionárias ──
+    match /ponto_funcionarias/{id} {
+      allow read: if isSignedIn() && (request.auth.uid == id || isAdmin());
+      allow write: if isAdmin();
+    }
+
+    // ── Ponto: registros de batida ──
+    // Funcionária lê/cria apenas os próprios; correção/exclusão é só do admin.
+    match /ponto_registros/{id} {
+      allow read: if isAdmin() ||
+        (isSignedIn() && resource.data.funcionariaId == request.auth.uid);
+      allow create: if isAdmin() ||
+        (isSignedIn() && request.resource.data.funcionariaId == request.auth.uid);
+      allow update, delete: if isAdmin();
+    }
+
+    // Tudo o que não casar acima é negado.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

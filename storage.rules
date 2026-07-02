@@ -1,0 +1,29 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // ⚠️ AJUSTE AQUI: e-mail(s) do empregador/administrador (mesmo do firestore.rules).
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.email in ['itamarlssf@gmail.com'];
+    }
+
+    // Selfies do ponto: ponto/selfies/{funcionariaId}/{arquivo}
+    // A funcionária só envia/lê as próprias; o admin lê todas.
+    match /ponto/selfies/{funcionariaId}/{arquivo} {
+      allow read: if isAdmin() || (isSignedIn() && request.auth.uid == funcionariaId);
+      allow write: if isSignedIn() &&
+        request.auth.uid == funcionariaId &&
+        request.resource.size < 2 * 1024 * 1024 &&
+        request.resource.contentType.matches('image/.*');
+    }
+
+    // Demais caminhos negados por padrão.
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
