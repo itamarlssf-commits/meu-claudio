@@ -6,6 +6,7 @@ import { usePontoStore } from '@/store/use-ponto-store';
 import useBaterPonto from '@/hooks/useBaterPonto';
 import { detectarRosto } from '@/lib/face-check';
 import { getFuncionaria } from '@/lib/ponto-firebase';
+import CapturaSelfieModal from '@/components/ponto/CapturaSelfieModal';
 import {
   dataLocal,
   formatDuracao,
@@ -31,10 +32,10 @@ export default function BaterPontoView() {
   const syncStatus = usePontoStore((s) => s.syncStatus);
   const { baterPonto, salvando } = useBaterPonto();
 
-  const inputRef = useRef<HTMLInputElement>(null);
   const tipoPendente = useRef<TipoRegistro>('entrada');
   const [mensagem, setMensagem] = useState<string>('');
   const [verificando, setVerificando] = useState(false);
+  const [capturaAberta, setCapturaAberta] = useState(false);
   const [localTrabalho, setLocalTrabalho] = useState<LocalTrabalho | undefined>();
 
   useEffect(() => {
@@ -50,13 +51,9 @@ export default function BaterPontoView() {
   const { estado } = statusAtual(registrosHoje);
   const { totalMs } = useMemo(() => parearRegistros(registrosHoje), [registrosHoje]);
 
-  function abrirCamera(tipo: TipoRegistro) {
-    tipoPendente.current = tipo;
-    inputRef.current?.click();
-  }
-
   function acionar(tipo: TipoRegistro) {
-    abrirCamera(tipo);
+    tipoPendente.current = tipo;
+    setCapturaAberta(true);
   }
 
   async function registrar(tipo: TipoRegistro, selfie: File) {
@@ -80,15 +77,8 @@ export default function BaterPontoView() {
     }
   }
 
-  async function onArquivo(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0] ?? null;
-    e.target.value = '';
-
-    // Selfie é obrigatória: sem foto, não registra.
-    if (!file) {
-      setMensagem('⚠️ A foto é obrigatória para registrar o ponto.');
-      return;
-    }
+  async function onCapturarFoto(file: File) {
+    setCapturaAberta(false);
 
     // Detecção de rosto (não é biometria — só confere que há um rosto na foto).
     setMensagem('Verificando a foto…');
@@ -187,15 +177,6 @@ export default function BaterPontoView() {
           )}
         </div>
 
-        <input
-          ref={inputRef}
-          type="file"
-          accept="image/*"
-          capture="user"
-          onChange={onArquivo}
-          style={{ display: 'none' }}
-        />
-
         <div
           style={{
             display: 'flex',
@@ -207,7 +188,8 @@ export default function BaterPontoView() {
             fontSize: 12,
           }}
         >
-          📸 A selfie é obrigatória em cada registro.
+          📸 A selfie é obrigatória em cada registro — só confirma que foi você, sem
+          reconhecimento facial.
         </div>
 
         {mensagem && (
@@ -302,6 +284,13 @@ export default function BaterPontoView() {
           )}
         </div>
       </div>
+
+      {capturaAberta && (
+        <CapturaSelfieModal
+          onCapturar={onCapturarFoto}
+          onCancelar={() => setCapturaAberta(false)}
+        />
+      )}
     </div>
   );
 }
