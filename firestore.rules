@@ -28,6 +28,14 @@ service cloud.firestore {
     match /consultorio/{doc=**} {
       allow read, write: if isAdmin();
     }
+    // Novo formato: um documento por paciente.
+    match /pacientes/{doc=**} {
+      allow read, write: if isAdmin();
+    }
+    // Backups diários automáticos do banco de pacientes.
+    match /backups/{doc=**} {
+      allow read, write: if isAdmin();
+    }
     match /leads/{doc=**} {
       allow read, write: if isAdmin();
     }
