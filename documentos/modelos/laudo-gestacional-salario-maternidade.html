@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Laudo médico — gestação / salário-maternidade</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm 20mm; }
+  :root{
+    --tinta:#111418;
+    --suave:#5b6470;
+    --linha:#c9d0d8;
+    --realce:#f4f7fa;
+  }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0; padding:24px;
+    font-family:"Georgia","Times New Roman",serif;
+    font-size:11.5pt; line-height:1.55; color:var(--tinta);
+    background:#eef1f4;
+  }
+  .folha{
+    max-width:210mm; margin:0 auto; padding:18mm 16mm;
+    background:#fff; box-shadow:0 2px 18px rgba(0,0,0,.12);
+  }
+  header{ border-bottom:2px solid var(--tinta); padding-bottom:10px; margin-bottom:18px; }
+  .medico{ font-size:15pt; font-weight:700; letter-spacing:.3px; margin:0; }
+  .especialidade{ font-size:10pt; color:var(--suave); margin:2px 0 0; }
+  .contato{ font-size:9pt; color:var(--suave); margin:6px 0 0; }
+  h1{
+    font-size:12.5pt; text-align:center; text-transform:uppercase;
+    letter-spacing:1.2px; margin:22px 0 2px;
+  }
+  .subtitulo{ text-align:center; font-size:9.5pt; color:var(--suave); margin:0 0 20px; font-style:italic; }
+  h2{
+    font-size:10pt; text-transform:uppercase; letter-spacing:1px;
+    border-bottom:1px solid var(--linha); padding-bottom:4px;
+    margin:20px 0 10px; color:var(--suave); font-family:Arial,Helvetica,sans-serif;
+  }
+  dl{ margin:0; display:grid; grid-template-columns:auto 1fr; gap:4px 12px; }
+  dt{ font-weight:700; white-space:nowrap; }
+  dd{ margin:0; }
+  p{ margin:0 0 10px; text-align:justify; }
+  ul{ margin:0 0 10px; padding-left:20px; }
+  li{ margin-bottom:4px; }
+  .destaque{ background:var(--realce); border-left:3px solid var(--tinta); padding:10px 14px; margin:12px 0; }
+  .cid{ font-family:Arial,Helvetica,sans-serif; font-size:10pt; }
+  .assinatura{ margin-top:46px; text-align:center; page-break-inside:avoid; }
+  .assinatura .linha{ width:74%; margin:0 auto; border-top:1px solid var(--tinta); padding-top:6px; }
+  .assinatura .nome{ font-weight:700; }
+  .assinatura .crm{ font-size:10pt; color:var(--suave); }
+  .carimbo{ margin-top:26px; font-size:9pt; color:var(--suave); text-align:center; }
+  .local-data{ margin-top:30px; text-align:right; }
+  .rodape{ margin-top:26px; padding-top:8px; border-top:1px solid var(--linha); font-size:8.5pt; color:var(--suave); text-align:center; }
+  @media print{
+    body{ background:#fff; padding:0; }
+    .folha{ box-shadow:none; max-width:none; padding:0; }
+  }
+</style>
+</head>
+<body>
+<main class="folha">
+
+  <header>
+    <p class="medico">Dr. Itamar Santana</p>
+    <p class="especialidade">Ginecologia e Obstetrícia · CRM-PE {{CRM}} · RQE {{RQE}}</p>
+    <p class="contato">{{ENDERECO_CONSULTORIO}} · {{TELEFONE_CONSULTORIO}}</p>
+  </header>
+
+  <h1>Laudo Médico</h1>
+  <p class="subtitulo">Emitido a pedido da paciente, para fins de requerimento de salário-maternidade junto ao INSS</p>
+
+  <h2>1. Identificação da paciente</h2>
+  <dl>
+    <dt>Nome:</dt><dd>{{PACIENTE_NOME}}</dd>
+    <dt>Data de nascimento:</dt><dd>{{PACIENTE_NASC}}</dd>
+    <dt>CPF:</dt><dd>{{PACIENTE_CPF}}</dd>
+    <dt>NIT / PIS / PASEP:</dt><dd>{{PACIENTE_NIT}}</dd>
+    <dt>Endereço:</dt><dd>{{PACIENTE_ENDERECO}}</dd>
+  </dl>
+
+  <h2>2. Dados da gestação</h2>
+  <dl>
+    <dt>Tipo de gestação:</dt><dd>{{TIPO_GESTACAO}}</dd>
+    <dt>DUM:</dt><dd>{{DUM}}</dd>
+    <dt>Data provável do parto (DPP):</dt><dd><strong>{{DPP}}</strong></dd>
+    <dt>Idade gestacional nesta data:</dt><dd>{{IG_ATUAL}}</dd>
+    <dt>Início do pré-natal:</dt><dd>{{INICIO_PRENATAL}}</dd>
+    <dt>Via de parto prevista:</dt><dd>{{VIA_PARTO}}</dd>
+  </dl>
+
+  <h2>3. História clínica e evolução</h2>
+  <p>{{HISTORIA_CLINICA}}</p>
+
+  <h2>4. Diagnóstico</h2>
+  <ul class="cid">{{DIAGNOSTICOS}}</ul>
+
+  <h2>5. Conduta atual</h2>
+  <ul>{{CONDUTA}}</ul>
+
+  <h2>6. Conclusão</h2>
+  {{CONCLUSAO}}
+
+  <p class="local-data">{{LOCAL}}, {{DATA_EXTENSO}}.</p>
+
+  <div class="assinatura">
+    <div class="linha">
+      <div class="nome">Dr. Itamar Santana</div>
+      <div class="crm">Médico Ginecologista e Obstetra — CRM-PE {{CRM}} / RQE {{RQE}}</div>
+    </div>
+  </div>
+
+  <p class="carimbo">(assinatura e carimbo do médico assistente)</p>
+
+  <p class="rodape">
+    Documento emitido a pedido da paciente, para os fins de direito. As informações aqui prestadas
+    são cobertas por sigilo profissional (art. 73 do Código de Ética Médica) e destinam-se
+    exclusivamente à instrução do requerimento administrativo indicado.
+  </p>
+
+</main>
+</body>
+</html>
