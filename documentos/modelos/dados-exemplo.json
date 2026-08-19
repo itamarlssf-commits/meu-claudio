@@ -1,0 +1,38 @@
+{
+  "CRM": "00000",
+  "RQE": "0000",
+  "ENDERECO_CONSULTORIO": "Rua Exemplo, 000 — Recife/PE",
+  "TELEFONE_CONSULTORIO": "(81) 0000-0000",
+
+  "PACIENTE_NOME": "NOME COMPLETO DA PACIENTE",
+  "PACIENTE_NASC": "00/00/0000",
+  "PACIENTE_CPF": "000.000.000-00",
+  "PACIENTE_NIT": "000.00000.00-0",
+  "PACIENTE_ENDERECO": "Rua Exemplo, 000 — Recife/PE",
+
+  "TIPO_GESTACAO": "Gestação tópica única, de alto risco",
+  "DUM": "00/00/0000",
+  "DPP": "00/00/0000",
+  "IG_ATUAL": "00 semanas e 0 dias",
+  "INICIO_PRENATAL": "00/00/0000",
+  "VIA_PARTO": "A definir conforme evolução obstétrica",
+
+  "HISTORIA_CLINICA": "Descrever, em texto corrido, o acompanhamento pré-natal, a intercorrência diagnosticada, a data do diagnóstico e a evolução até a presente data.",
+
+  "DIAGNOSTICOS": [
+    "Diabetes mellitus gestacional — <strong>CID-10: O24.4</strong>",
+    "Supervisão de gestação de alto risco — <strong>CID-10: Z35.8</strong>"
+  ],
+
+  "CONDUTA": [
+    "Dieta fracionada com controle de carboidratos, orientada por nutricionista.",
+    "Automonitorização glicêmica capilar (jejum e pós-prandiais).",
+    "Vigilância de bem-estar fetal e do crescimento fetal por ultrassonografia.",
+    "Consultas pré-natais em intervalos reduzidos até o parto."
+  ],
+
+  "CONCLUSAO": "<p>Parágrafos da conclusão, incluindo a finalidade do documento e o período de afastamento pretendido.</p>",
+
+  "LOCAL": "Recife",
+  "DATA_EXTENSO": "00 de mês de 0000"
+}
