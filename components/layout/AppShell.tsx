@@ -11,6 +11,7 @@ import FinanceiroView from '@/components/views/FinanceiroView';
 import AgendaView from '@/components/views/AgendaView';
 import AlertasView from '@/components/views/AlertasView';
 import AtendimentoView from '@/components/views/AtendimentoView';
+import EducacaoView from '@/components/views/EducacaoView';
 import PacienteModal from '@/components/paciente/PacienteModal';
 
 export default function AppShell() {
@@ -64,6 +65,7 @@ export default function AppShell() {
         {view === 'atendimento' && (
           <AtendimentoView data={data} setData={setData} />
         )}
+        {view === 'educacao' && <EducacaoView />}
       </main>
 
       {openPacienteId && (

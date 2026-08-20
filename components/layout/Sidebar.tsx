@@ -19,6 +19,7 @@ const NAV: NavItem[] = [
   { id: 'financeiro',  label: 'Financeiro',     icon: '₊' },
   { id: 'agenda',      label: 'Agenda',         icon: '◷' },
   { id: 'alertas',     label: 'Alertas',        icon: '◈' },
+  { id: 'educacao',    label: 'Educação',       icon: '◐' },
 ];
 
 interface SidebarProps {
