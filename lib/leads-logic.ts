@@ -60,7 +60,7 @@ export const OBJECOES: Objecao[] = [
     codigo: 'pesquisar',
     titulo: '🔍 "Quero pesquisar o médico..."',
     resposta:
-      '"Ótimo! Fica totalmente à vontade — é importante se sentir segura. O Instagram do Dr. Itamar é @itamarsantana.go, você vai se sentir muito mais tranquila depois de ver o trabalho dele. Posso reservar um horário enquanto isso? Se não quiser manter, cancela sem compromisso nenhum."',
+      '"Ótimo! Fica totalmente à vontade — é importante se sentir segura. O Instagram do Dr. Itamar é @dr.itamarsantana, você vai se sentir muito mais tranquila depois de ver o trabalho dele. Posso reservar um horário enquanto isso? Se não quiser manter, cancela sem compromisso nenhum."',
   },
   {
     codigo: 'ligar',
